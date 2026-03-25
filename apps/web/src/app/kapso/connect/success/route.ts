@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
         set
           provider = 'kapso_platform',
           status = 'connected',
-          provider_phone_number_id = $3,
-          provider_business_account_id = coalesce($4, provider_business_account_id),
-          phone_e164 = coalesce($5, phone_e164),
+          provider_phone_number_id = $3::text,
+          provider_business_account_id = coalesce($4::text, provider_business_account_id),
+          phone_e164 = coalesce($5::text, phone_e164),
           connected_at = coalesce(connected_at, now()),
           metadata = coalesce(metadata, '{}'::jsonb)
             || jsonb_build_object(
-              'kapso_phone_number_id', $3,
-              'kapso_setup_link_id', $6,
+              'kapso_phone_number_id', $3::text,
+              'kapso_setup_link_id', $6::text,
               'kapso_setup_status', 'completed',
               'kapso_setup_error', null
             ),
