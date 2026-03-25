@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendeTo' — Tu IA que vende por WhatsApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --vt-green: #48f775;
+  --vt-green-dark: #2dc45a;
+  --vt-green-light: #e0fde9;
+  --vt-green-tint: #f0fef4;
+  --vt-offwhite: #F0F0E8;
+  --vt-black: #000000;
+  --vt-dark-maroon: #482828;
+
+  --chat-bg: #ECE5DD;
+  --bubble-incoming: #FFFFFF;
+  --bubble-outgoing: #48f775;
+  --bubble-outgoing-text: #0a2614;
+  --bubble-incoming-text: #1A1A1A;
+  --timestamp-color: #8A8D91;
+
+  --phone-bezel: #1A1A1A;
+  --phone-screen-radius: 36px;
+  --phone-width: 300px;
+  --phone-height: 600px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #FFFFFF;
+  color: var(--vt-black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════
+   Main Layout — Copy left, Phone right
+   ═══════════════════════════════════════ */
+
+.vendeto-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 64px;
+  padding: 64px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════
+   Left Column — Explanatory Copy
+   ═══════════════════════════════════════ */
+
+.copy-column {
+  flex: 1;
+  max-width: 440px;
+}
+
+.copy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--vt-green);
+  color: #0a2614;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+}
+
+.copy-badge svg {
+  width: 16px;
+  height: 16px;
+  fill: #0a2614;
+}
+
+.copy-headline {
+  font-size: clamp(2rem, 1.2rem + 2.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--vt-black);
+  margin-bottom: 32px;
+}
+
+.copy-headline em {
+  font-style: normal;
+  color: var(--vt-green-dark);
+}
+
+.copy-subtitle {
+  font-size: 17px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 32px;
+  max-width: 400px;
+}
+
+/* Step list — vertical on left side */
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-row {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid #E5E5E0;
+  border-bottom: none;
+  background: #F7F7F5;
+  transition: all 0.4s ease;
+  overflow: hidden;
+}
+
+.step-row:last-child {
+  border-bottom: 1.5px solid #E5E5E0;
+}
+
+.step-row.active {
+  background: var(--vt-green-light);
+  border-color: var(--vt-green);
+}
+
+.step-row.active + .step-row {
+  border-top-color: var(--vt-green);
+}
+
+.step-row.completed {
+  background: var(--vt-green-tint);
+  border-color: rgba(72, 247, 117, 0.4);
+}
+
+.step-row.completed + .step-row {
+  border-top-color: rgba(72, 247, 117, 0.4);
+}
+
+.step-num {
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: #E5E5E0;
+  color: #7A7A74;
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+  border-right: 1.5px solid #E5E5E0;
+}
+
+.step-row.active .step-num,
+.step-row.completed .step-num {
+  background: var(--vt-green);
+  color: #0a2614;
+  border-right-color: var(--vt-green);
+}
+
+.step-content {
+  padding: 12px 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #7A7A74;
+  transition: color 0.4s ease;
+  margin-bottom: 2px;
+}
+
+.step-row.active .step-title,
+.step-row.completed .step-title {
+  color: #000;
+}
+
+.step-desc {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.4;
+  transition: color 0.4s ease;
+}
+
+.step-row.active .step-desc {
+  color: #555;
+}
+
+.step-row.completed .step-desc {
+  color: #777;
+}
+
+/* ═══════════════════════════════════════
+   Right Column — Phone + Annotations
+   ═══════════════════════════════════════ */
+
+.phone-column {
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Annotation callouts */
+.annotation {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--vt-black);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.annotation.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.annotation-left {
+  right: calc(100% + 16px);
+  transform: translateX(-8px);
+}
+
+.annotation-left.visible {
+  transform: translateX(0);
+}
+
+.annotation-right {
+  left: calc(100% + 16px);
+}
+
+.annotation .annotation-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--vt-green);
+  flex-shrink: 0;
+}
+
+.annotation .annotation-icon svg {
+  width: 12px;
+  height: 12px;
+  fill: #0a2614;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .annotation { opacity: 1; transform: none; transition: none; }
+}
+
+/* ═══════════════════════════════════════
+   Phone Mockup
+   ═══════════════════════════════════════ */
+
+.phone-mockup {
+  width: var(--phone-width);
+  height: var(--phone-height);
+  background: var(--phone-bezel);
+  border-radius: 44px;
+  padding: 12px;
+  position: relative;
+  box-shadow:
+    0 0 0 2px #333,
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.phone-mockup::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 26px;
+  background: var(--phone-bezel);
+  border-radius: 0 0 16px 16px;
+  z-index: 20;
+}
+
+.phone-mockup::after {
+  content: '';
+  position: absolute;
+  top: 17px;
+  left: 50%;
+  transform: translateX(-50%) translateX(28px);
+  width: 9px;
+  height: 9px;
+  background: #2A2A2A;
+  border-radius: 50%;
+  z-index: 21;
+  box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--chat-bg);
+  border-radius: var(--phone-screen-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Status Bar */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 22px 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0a2614;
+  background: var(--vt-green);
+  position: relative;
+  z-index: 10;
+}
+
+.status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-bar-icons svg {
+  width: 14px;
+  height: 14px;
+  fill: #0a2614;
+}
+
+/* Chat Header */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 8px;
+  background: var(--vt-green-dark);
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.chat-header-back {
+  width: 18px;
+  height: 18px;
+  fill: #FFFFFF;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.chat-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--vt-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0a2614;
+}
+
+.chat-header-info { flex: 1; min-width: 0; }
+
+.chat-header-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chat-header-name .ia-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 1px 5px;
+  letter-spacing: 0.05em;
+}
+
+.chat-header-status {
+  font-size: 10px;
+  opacity: 0.85;
+  line-height: 1.2;
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.chat-header-actions svg {
+  width: 16px;
+  height: 16px;
+  fill: #FFFFFF;
+  opacity: 0.9;
+}
+
+/* Chat Body */
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background-color: var(--chat-bg);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 3a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zm30 0a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zM5 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm50 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-15 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm30 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 45a2 2 0 1 1 0 4 2 2 0 0 1 0-4z' fill='%23D4CCBA' fill-opacity='0.25'/%3E%3C/svg%3E");
+  scrollbar-width: none;
+}
+
+.chat-body::-webkit-scrollbar { display: none; }
+
+.chat-date {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: #54656F;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+/* Messages */
+.message {
+  max-width: 84%;
+  padding: 5px 8px 3px;
+  border-radius: 8px;
+  position: relative;
+  line-height: 1.35;
+  font-size: 13px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  word-wrap: break-word;
+  margin-bottom: 2px;
+}
+
+.message.visible { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .message { opacity: 1; transform: none; transition: none; }
+}
+
+.message-incoming {
+  align-self: flex-start;
+  background: var(--bubble-incoming);
+  color: var(--bubble-incoming-text);
+  border-top-left-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+.message-outgoing {
+  align-self: flex-end;
+  background: var(--bubble-outgoing);
+  color: var(--bubble-outgoing-text);
+  border-top-right-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+}
+
+.message-text { white-space: pre-line; }
+
+.message-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  margin-top: 1px;
+  opacity: 0.65;
+}
+
+.message-outgoing .message-time { color: rgba(10,38,20,0.55); }
+.message-incoming .message-time { color: var(--timestamp-color); }
+
+.message-check { display: inline-flex; }
+.message-check svg { width: 13px; height: 13px; fill: rgba(10,38,20,0.55); }
+
+/* Payment Card */
+.payment-card {
+  max-width: 84%;
+  align-self: flex-end;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  margin-bottom: 2px;
+}
+
+.payment-card.visible { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-card { opacity: 1; transform: none; transition: none; }
+}
+
+.payment-card-inner {
+  background: #FFFFFF;
+  border: 2px solid var(--vt-green);
+  padding: 10px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.payment-card-inner:hover { background: var(--vt-green-tint); }
+
+.payment-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--vt-green-dark);
+}
+
+.payment-card-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--vt-green-dark);
+  flex-shrink: 0;
+}
+
+.payment-card-sub {
+  font-size: 10px;
+  color: #8A8D91;
+  margin-top: 3px;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  align-self: flex-start;
+  background: var(--bubble-incoming);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border-top-left-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+.typing-indicator.visible { opacity: 1; transform: translateY(0); }
+
+.typing-indicator.outgoing {
+  align-self: flex-end;
+  background: var(--bubble-outgoing);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 2px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #A0A5AA;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-indicator.outgoing .typing-dot { background: rgba(10,38,20,0.35); }
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot { animation: none; opacity: 0.6; }
+  .typing-indicator { opacity: 1; transform: none; transition: none; }
+}
+
+/* Chat Input Bar */
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  background: var(--chat-bg);
+  flex-shrink: 0;
+}
+
+.chat-input-field {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 18px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #8A8D91;
+  border: none;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-input-mic {
+  width: 32px;
+  height: 32px;
+  background: var(--vt-green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-input-mic svg { width: 16px; height: 16px; fill: #0a2614; }
+
+/* Home bar */
+.home-indicator {
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chat-bg);
+  flex-shrink: 0;
+}
+
+.home-indicator-bar {
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.2);
+}
+
+/* Replay */
+.replay-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 24px;
+  background: var(--vt-black);
+  color: #FFFFFF;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  width: 100%;
+  max-width: var(--phone-width);
+}
+
+.replay-btn:hover { background: #333; }
+.replay-btn:active { transform: scale(0.97); }
+.replay-btn.show { display: flex; }
+
+.replay-btn svg { width: 14px; height: 14px; fill: #FFFFFF; }
+
+/* ═══════════════════════════════════════
+   Responsive — Mobile: stack vertically
+   ═══════════════════════════════════════ */
+
+@media (max-width: 800px) {
+  .vendeto-section {
+    flex-direction: column;
+    gap: 40px;
+    padding: 40px 20px;
+    align-items: center;
+  }
+
+  .copy-column {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .copy-subtitle {
+    max-width: 100%;
+  }
+
+  .copy-badge {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .annotation {
+    display: none;
+  }
+
+  .phone-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phone-mockup {
+    width: 290px;
+    height: 570px;
+  }
+}
+
+/* Footer */
+.widget-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 11px;
+  color: #8A8D91;
+}
+
+.widget-footer a {
+  color: #8A8D91;
+  text-decoration: underline;
+  text-decoration-color: rgba(138, 141, 145, 0.3);
+}
+
+.widget-footer a:hover { color: #54656F; }
+</style>
+</head>
+<body>
+
+<div class="vendeto-section" id="vendeto-widget">
+
+  <!-- Left: Explanatory Copy + Steps -->
+  <div class="copy-column">
+    <div class="copy-badge">
+      <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Inteligencia artificial en WhatsApp
+    </div>
+
+    <h2 class="copy-headline">
+      De WhatsApp a pago<br>en 4 pasos.
+    </h2>
+
+    <div class="step-list" id="step-list">
+      <div class="step-row" id="step-1">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <div class="step-title">Conecta tu WhatsApp</div>
+          <div class="step-desc">Vincula tu numero de WhatsApp Business en minutos. Sin codigo, sin complicaciones tecnicas.</div>
+        </div>
+      </div>
+      <div class="step-row" id="step-2">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <div class="step-title">Tu agente empieza a vender</div>
+          <div class="step-desc">VendeTo' responde automaticamente a tus clientes. Recomienda productos, responde preguntas y arma el pedido.</div>
+        </div>
+      </div>
+      <div class="step-row" id="step-3">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <div class="step-title">Cobro automatico con Azul</div>
+          <div class="step-desc">Cuando el cliente esta listo, VendeTo' genera un enlace de pago seguro de Azul directo en el chat.</div>
+        </div>
+      </div>
+      <div class="step-row" id="step-4">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <div class="step-title">Venta confirmada</div>
+          <div class="step-desc">El pago se verifica al instante. Tu ves todo en tu dashboard. El cliente recibe su confirmacion en WhatsApp.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Phone Mockup + Annotations -->
+  <div class="phone-column">
+
+    <!-- Floating annotations that appear during conversation -->
+    <div class="annotation annotation-right" id="ann-1" style="top: 140px;">
+      <div class="annotation-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      El cliente escribe
+    </div>
+
+    <div class="annotation annotation-right" id="ann-2" style="top: 230px;">
+      <div class="annotation-icon">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>
+      </div>
+      Tu agente vende solo
+    </div>
+
+    <div class="annotation annotation-right" id="ann-3" style="top: 360px;">
+      <div class="annotation-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+      </div>
+      Cobro con Azul
+    </div>
+
+    <div class="annotation annotation-right" id="ann-4" style="top: 460px;">
+      <div class="annotation-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+      </div>
+      Venta confirmada
+    </div>
+
+    <div class="phone-mockup">
+      <div class="phone-screen">
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span>3:42 PM</span>
+          <div class="status-bar-icons">
+            <svg viewBox="0 0 24 24"><path d="M2 22h2V12H2v10zm4 0h2V8H6v14zm4 0h2V4h-2v18zm4 0h2V2h-2v20z" opacity="0.9"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </div>
+        </div>
+
+        <!-- Chat Header with IA badge -->
+        <div class="chat-header">
+          <svg class="chat-header-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          <div class="chat-header-avatar">V</div>
+          <div class="chat-header-info">
+            <div class="chat-header-name">
+              VendeTo'
+              <span class="ia-badge">IA</span>
+            </div>
+            <div class="chat-header-status">en línea</div>
+          </div>
+          <div class="chat-header-actions">
+            <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </div>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="chat-body" id="chat-body">
+          <div class="chat-date">Hoy</div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <div class="chat-input-field">Escribe un mensaje...</div>
+          <div class="chat-input-mic">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          </div>
+        </div>
+
+        <div class="home-indicator">
+          <div class="home-indicator-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="replay-btn" id="replay-btn" aria-label="Repetir conversación">
+      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+      Repetir
+    </button>
+  </div>
+</div>
+
+<footer class="widget-footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+    Created with Perplexity Computer
+  </a>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const conversation = [
+    {
+      type: 'incoming',
+      text: 'Hola! Tienen el pastel de tres leches disponible?',
+      time: '3:42 PM',
+      step: 1,
+      annotation: 'ann-1',
+      delay: 800
+    },
+    {
+      type: 'outgoing',
+      text: '¡Hola! Sí, tenemos el tres leches disponible 🎂\nTamaño regular: RD$1,200\nTamaño grande: RD$1,850\n¿Cuál te gustaría?',
+      time: '3:42 PM',
+      step: 2,
+      annotation: 'ann-2',
+      delay: 1400
+    },
+    {
+      type: 'incoming',
+      text: 'El grande por favor',
+      time: '3:43 PM',
+      step: 2,
+      annotation: null,
+      delay: 1000
+    },
+    {
+      type: 'outgoing',
+      text: '¡Perfecto! Tu pedido:\n🍰 Tres leches grande — RD$1,850\n\nAquí tienes tu enlace de pago 👇',
+      time: '3:43 PM',
+      step: 2,
+      annotation: null,
+      delay: 1200
+    },
+    {
+      type: 'payment',
+      text: 'Pagar RD$1,850 con Azul',
+      time: '3:43 PM',
+      step: 3,
+      annotation: 'ann-3',
+      delay: 600
+    },
+    {
+      type: 'incoming',
+      text: 'Listo, ya pagué ✅',
+      time: '3:44 PM',
+      step: 4,
+      annotation: null,
+      delay: 1500
+    },
+    {
+      type: 'outgoing',
+      text: '✅ ¡Pago confirmado! RD$1,850 recibidos.\nTu pedido está en camino. ¡Gracias por tu compra! 🎉',
+      time: '3:44 PM',
+      step: 4,
+      annotation: 'ann-4',
+      delay: 1200
+    }
+  ];
+
+  const chatBody = document.getElementById('chat-body');
+  const replayBtn = document.getElementById('replay-btn');
+  const widget = document.getElementById('vendeto-widget');
+
+  let isPlaying = false;
+  let hasPlayed = false;
+  let timeouts = [];
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const checkSVG = `<svg viewBox="0 0 16 11" width="13" height="11"><path d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 0 0-.336-.146.47.47 0 0 0-.343.146l-.311.31a.445.445 0 0 0-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 0 0 .501.203.697.697 0 0 0 .546-.266l6.646-8.417a.497.497 0 0 0 .108-.299.441.441 0 0 0-.14-.305l-.387-.342z" fill="currentColor"/></svg><svg viewBox="0 0 16 11" width="13" height="11" style="margin-left:-7px"><path d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 0 0-.336-.146.47.47 0 0 0-.343.146l-.311.31a.445.445 0 0 0-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 0 0 .501.203.697.697 0 0 0 .546-.266l6.646-8.417a.497.497 0 0 0 .108-.299.441.441 0 0 0-.14-.305l-.387-.342z" fill="currentColor"/></svg>`;
+
+  const linkSVG = `<svg viewBox="0 0 24 24" width="16" height="16"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="currentColor"/></svg>`;
+
+  function createMessageEl(msg) {
+    if (msg.type === 'payment') return createPaymentCard(msg);
+
+    const el = document.createElement('div');
+    el.className = `message message-${msg.type === 'incoming' ? 'incoming' : 'outgoing'}`;
+
+    const textEl = document.createElement('div');
+    textEl.className = 'message-text';
+    textEl.textContent = msg.text;
+    el.appendChild(textEl);
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'message-time';
+    timeEl.innerHTML = msg.time;
+
+    if (msg.type === 'outgoing') {
+      timeEl.innerHTML += `<span class="message-check">${checkSVG}</span>`;
+    }
+
+    el.appendChild(timeEl);
+    return el;
+  }
+
+  function createPaymentCard(msg) {
+    const el = document.createElement('div');
+    el.className = 'payment-card';
+    el.innerHTML = `
+      <div class="payment-card-inner">
+        <div class="payment-card-icon">
+          ${linkSVG}
+          <span>${msg.text}</span>
+        </div>
+        <div class="payment-card-sub">pay.vendeto.com • Enlace seguro</div>
+      </div>
+    `;
+    return el;
+  }
+
+  function createTypingIndicator(isOutgoing) {
+    const el = document.createElement('div');
+    el.className = 'typing-indicator' + (isOutgoing ? ' outgoing' : '');
+    el.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+    return el;
+  }
+
+  function setStep(stepNum) {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'completed');
+      if (i < stepNum) el.classList.add('completed');
+      else if (i === stepNum) el.classList.add('active');
+    }
+  }
+
+  function resetSteps() {
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('step-' + i).classList.remove('active', 'completed');
+    }
+  }
+
+  function hideAllAnnotations() {
+    document.querySelectorAll('.annotation').forEach(a => a.classList.remove('visible'));
+  }
+
+  function showAnnotation(id) {
+    if (!id) return;
+    // Hide previous annotations first
+    hideAllAnnotations();
+    const el = document.getElementById(id);
+    if (el) el.classList.add('visible');
+  }
+
+  function scrollToBottom() {
+    chatBody.scrollTo({
+      top: chatBody.scrollHeight,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+    });
+  }
+
+  function clearChat() {
+    Array.from(chatBody.children).forEach(child => {
+      if (!child.classList.contains('chat-date')) child.remove();
+    });
+  }
+
+  function playConversation() {
+    if (isPlaying) return;
+    isPlaying = true;
+    hasPlayed = true;
+    replayBtn.classList.remove('show');
+    clearChat();
+    resetSteps();
+    hideAllAnnotations();
+
+    if (prefersReducedMotion) {
+      showAllAtOnce();
+      return;
+    }
+
+    let totalDelay = 400;
+
+    conversation.forEach((msg, index) => {
+      const isOutgoing = msg.type === 'outgoing' || msg.type === 'payment';
+      const typingDuration = isOutgoing ? 1000 : 700;
+
+      timeouts.push(setTimeout(() => {
+        setStep(msg.step);
+        const typing = createTypingIndicator(isOutgoing);
+        chatBody.appendChild(typing);
+        scrollToBottom();
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            typing.classList.add('visible');
+          });
+        });
+
+        timeouts.push(setTimeout(() => {
+          typing.remove();
+          const messageEl = createMessageEl(msg);
+          chatBody.appendChild(messageEl);
+          scrollToBottom();
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              messageEl.classList.add('visible');
+              scrollToBottom();
+              // Show annotation for this message
+              showAnnotation(msg.annotation);
+            });
+          });
+
+          if (index === conversation.length - 1) {
+            timeouts.push(setTimeout(() => {
+              for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                el.classList.remove('active');
+                el.classList.add('completed');
+              }
+              isPlaying = false;
+              replayBtn.classList.add('show');
+              // Keep last annotation visible for a moment then hide
+              timeouts.push(setTimeout(() => {
+                hideAllAnnotations();
+              }, 2500));
+            }, 800));
+          }
+        }, typingDuration));
+
+      }, totalDelay));
+
+      totalDelay += msg.delay + typingDuration;
+    });
+  }
+
+  function showAllAtOnce() {
+    conversation.forEach((msg) => {
+      const messageEl = createMessageEl(msg);
+      messageEl.classList.add('visible');
+      chatBody.appendChild(messageEl);
+    });
+
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('step-' + i).classList.add('completed');
+    }
+
+    scrollToBottom();
+    isPlaying = false;
+    replayBtn.classList.add('show');
+  }
+
+  replayBtn.addEventListener('click', () => {
+    timeouts.forEach(t => clearTimeout(t));
+    timeouts = [];
+    isPlaying = false;
+    playConversation();
+  });
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasPlayed && !isPlaying) {
+          observer.disconnect();
+          setTimeout(() => playConversation(), 300);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    observer.observe(widget);
+  } else {
+    setTimeout(() => playConversation(), 500);
+  }
+
+})();
+</script>
+
+</body>
+</html>

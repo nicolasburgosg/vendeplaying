@@ -1,0 +1,113 @@
+services:
+  - type: web
+    runtime: node
+    name: vendeplaying-api
+    repo: https://github.com/nicolasburgosg/vendeplaying
+    branch: main
+    region: virginia
+    plan: starter
+    autoDeployTrigger: commit
+    healthCheckPath: /api/health
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @vendeto/api build
+    startCommand: pnpm --filter @vendeto/api start:prod
+    buildFilter:
+      paths:
+        - apps/api/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: VENDETO_ALLOWED_ORIGINS
+        sync: false
+      - key: VENDETO_ENABLE_DEV_ROUTES
+        value: "false"
+      - key: VENDETO_INTERNAL_API_TOKEN
+        generateValue: true
+      - key: VENDETO_PUBLIC_API_URL
+        sync: false
+      - key: VENDETO_KAPSO_API_KEY
+        sync: false
+      - key: VENDETO_KAPSO_API_BASE_URL
+        value: https://api.kapso.ai/platform/v1
+      - key: VENDETO_KAPSO_PROJECT_WEBHOOK_SECRET
+        sync: false
+      - key: VENDETO_KAPSO_META_WEBHOOK_TOKEN
+        sync: false
+
+  - type: worker
+    runtime: node
+    name: vendeplaying-worker
+    repo: https://github.com/nicolasburgosg/vendeplaying
+    branch: main
+    region: virginia
+    plan: starter
+    autoDeployTrigger: commit
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @vendeto/worker build
+    startCommand: pnpm --filter @vendeto/worker start:prod
+    buildFilter:
+      paths:
+        - apps/worker/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: VENDETO_AI_MODEL
+        value: gpt-4.1-mini
+      - key: VENDETO_KAPSO_API_KEY
+        sync: false
+      - key: VENDETO_KAPSO_API_BASE_URL
+        value: https://api.kapso.ai/platform/v1
+      - key: VENDETO_KAPSO_PROJECT_WEBHOOK_SECRET
+        sync: false
+      - key: VENDETO_KAPSO_META_WEBHOOK_TOKEN
+        sync: false
+
+  - type: web
+    runtime: node
+    name: vendeplaying-web
+    repo: https://github.com/nicolasburgosg/vendeplaying
+    branch: main
+    region: virginia
+    plan: starter
+    autoDeployTrigger: commit
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @vendeto/web build
+    startCommand: pnpm --filter @vendeto/web start
+    buildFilter:
+      paths:
+        - apps/web/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VENDETO_AI_MODEL
+        value: gpt-4.1-mini
+      - key: VENDETO_PUBLIC_API_URL
+        sync: false
+      - key: VENDETO_KAPSO_API_KEY
+        sync: false
+      - key: VENDETO_KAPSO_API_BASE_URL
+        value: https://api.kapso.ai/platform/v1
+      - key: VENDETO_KAPSO_PROJECT_WEBHOOK_SECRET
+        sync: false
+      - key: VENDETO_KAPSO_META_WEBHOOK_TOKEN
+        sync: false

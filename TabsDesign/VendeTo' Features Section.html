@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendeTo' — Funcionalidades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --vt-green: #48f775;
+  --vt-green-dark: #2dc45a;
+  --vt-green-light: #e0fde9;
+  --vt-green-tint: #f0fef4;
+  --vt-offwhite: #F0F0E8;
+  --vt-black: #000000;
+  --vt-dark-maroon: #482828;
+  --bg: #FFFFFF;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --border: #E8E8E4;
+  --surface: #F7F7F5;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   Section Header
+   ═══════════════════════════════════════ */
+
+.features-section {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 80px 24px 64px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 64px;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════
+   Feature Grid — 2 columns
+   ═══════════════════════════════════════ */
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════
+   Feature Card (shared)
+   ═══════════════════════════════════════ */
+
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-label {
+  display: inline-flex;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+}
+
+.feature-title {
+  font-size: clamp(1.25rem, 1rem + 0.8vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.feature-desc {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 420px;
+}
+
+.feature-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 4px;
+  transition: gap 0.2s ease;
+}
+
+.feature-cta:hover {
+  gap: 8px;
+}
+
+.feature-cta svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  transition: transform 0.2s ease;
+}
+
+.feature-cta:hover svg {
+  transform: translateX(2px);
+}
+
+/* ═══════════════════════════════════════
+   Icon Cards (4 smaller features)
+   ═══════════════════════════════════════ */
+
+.feature-icon-wrap {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vt-green);
+  flex-shrink: 0;
+}
+
+.feature-icon-wrap svg {
+  width: 24px;
+  height: 24px;
+  fill: #0a2614;
+}
+
+/* ═══════════════════════════════════════
+   AI Agent Demo — mini chat
+   ═══════════════════════════════════════ */
+
+.feature-card--demo {
+  padding-bottom: 0;
+}
+
+.demo-container {
+  margin-top: 8px;
+  margin-left: -32px;
+  margin-right: -32px;
+  background: #ECE5DD;
+  border-top: 1px solid var(--border);
+  padding: 16px 16px 0;
+  min-height: 220px;
+  position: relative;
+  overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 3a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zm30 0a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zM5 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm50 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-15 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm30 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 45a2 2 0 1 1 0 4 2 2 0 0 1 0-4z' fill='%23D4CCBA' fill-opacity='0.25'/%3E%3C/svg%3E");
+}
+
+.demo-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -16px -16px 12px;
+  padding: 8px 12px;
+  background: var(--vt-green-dark);
+  color: #fff;
+}
+
+.demo-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--vt-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0a2614;
+  flex-shrink: 0;
+}
+
+.demo-header-text {
+  flex: 1;
+}
+
+.demo-header-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.demo-ia-badge {
+  font-size: 8px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.25);
+  padding: 1px 4px;
+  letter-spacing: 0.05em;
+}
+
+.demo-header-status {
+  font-size: 9.5px;
+  opacity: 0.8;
+}
+
+.demo-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 16px;
+}
+
+.demo-msg {
+  max-width: 80%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: pre-line;
+}
+
+.demo-msg.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.demo-msg--in {
+  align-self: flex-start;
+  background: #fff;
+  color: #1a1a1a;
+  border-top-left-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+.demo-msg--out {
+  align-self: flex-end;
+  background: var(--vt-green);
+  color: #0a2614;
+  border-top-right-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+}
+
+.demo-msg-time {
+  font-size: 9.5px;
+  opacity: 0.55;
+  text-align: right;
+  margin-top: 1px;
+}
+
+/* Typing indicator for demo */
+.demo-typing {
+  align-self: flex-end;
+  background: var(--vt-green);
+  padding: 8px 14px;
+  border-radius: 8px;
+  border-top-right-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.demo-typing.visible { opacity: 1; }
+
+.demo-typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(10,38,20,0.35);
+  animation: dtBounce 1.4s ease-in-out infinite;
+}
+
+.demo-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.demo-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dtBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+/* ═══════════════════════════════════════
+   Dashboard Demo — animated stats
+   ═══════════════════════════════════════ */
+
+.dashboard-container {
+  margin-top: 8px;
+  margin-left: -32px;
+  margin-right: -32px;
+  background: #fafaf8;
+  border-top: 1px solid var(--border);
+  padding: 20px 20px 0;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dash-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-topbar-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--vt-green);
+  border-radius: 50%;
+}
+
+.dash-topbar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dash-topbar-right {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.dash-kpis {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dash-kpi {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.dash-kpi-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.dash-kpi-delta {
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dash-kpi-delta--up { color: var(--vt-green-dark); }
+.dash-kpi-delta--up::before { content: '▲ '; font-size: 7px; }
+
+/* Mini bar chart */
+.dash-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 60px;
+  padding: 0 4px;
+}
+
+.dash-bar {
+  flex: 1;
+  background: var(--vt-green);
+  opacity: 0.25;
+  min-height: 4px;
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.dash-bar.active {
+  opacity: 1;
+}
+
+.dash-chart-labels {
+  display: flex;
+  gap: 4px;
+  padding: 4px 4px 12px;
+}
+
+.dash-chart-labels span {
+  flex: 1;
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-section {
+    padding: 56px 16px 40px;
+  }
+
+  .section-header {
+    margin-bottom: 40px;
+  }
+
+  .feature-card {
+    padding: 28px 24px;
+  }
+
+  .feature-card--demo {
+    padding-bottom: 0;
+  }
+
+  .demo-container {
+    margin-left: -24px;
+    margin-right: -24px;
+  }
+
+  .dashboard-container {
+    margin-left: -24px;
+    margin-right: -24px;
+    padding: 16px 16px 0;
+  }
+}
+
+/* ═══════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-msg, .demo-typing { transition: none; opacity: 1; transform: none; }
+  .dash-bar { transition: none; }
+  .demo-typing-dot { animation: none; opacity: 0.6; }
+}
+
+/* Footer */
+.widget-footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 11px;
+  color: #8A8D91;
+}
+
+.widget-footer a {
+  color: #8A8D91;
+  text-decoration: underline;
+  text-decoration-color: rgba(138, 141, 145, 0.3);
+}
+
+.widget-footer a:hover { color: #54656F; }
+</style>
+</head>
+<body>
+
+<section class="features-section">
+
+  <div class="section-header">
+    <h2 class="section-title">Todo lo que necesitas para vender por WhatsApp</h2>
+  </div>
+
+  <div class="features-grid">
+
+    <!-- ═══════════════════════════════════
+         1. AI Sales Agent — ANIMATED DEMO
+         ═══════════════════════════════════ -->
+    <div class="feature-card feature-card--demo" id="card-ai">
+      <span class="feature-label">Ventas con IA</span>
+      <h3 class="feature-title">Agente de ventas con IA</h3>
+      <p class="feature-desc">Tu agente conoce tu catalogo completo. Responde preguntas, sugiere productos y maneja multiples conversaciones a la vez. En español dominicano, como hablan tus clientes.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+
+      <div class="demo-container" id="ai-demo">
+        <div class="demo-chat-header">
+          <div class="demo-avatar">V</div>
+          <div class="demo-header-text">
+            <div class="demo-header-name">VendeTo' <span class="demo-ia-badge">IA</span></div>
+            <div class="demo-header-status">en línea</div>
+          </div>
+        </div>
+        <div class="demo-messages" id="ai-messages">
+          <!-- Messages injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         2. Dashboard — ANIMATED DEMO
+         ═══════════════════════════════════ -->
+    <div class="feature-card feature-card--demo" id="card-dash">
+      <span class="feature-label">Control total</span>
+      <h3 class="feature-title">Dashboard de ventas</h3>
+      <p class="feature-desc">Ventas del dia, conversaciones activas, pagos pendientes. Todo en una pantalla. Sin hojas de Excel, sin cuadernos, sin perder el control.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+
+      <div class="dashboard-container" id="dash-demo">
+        <div class="dash-topbar">
+          <div class="dash-topbar-left">
+            <div class="dash-topbar-dot"></div>
+            <span class="dash-topbar-label">VendeTo' Dashboard</span>
+          </div>
+          <span class="dash-topbar-right">Hoy, 18 mar</span>
+        </div>
+
+        <div class="dash-kpis">
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Ventas hoy</div>
+            <div class="dash-kpi-value" id="kpi-ventas">0</div>
+            <div class="dash-kpi-delta dash-kpi-delta--up" id="kpi-ventas-delta">12% vs ayer</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Ingresos</div>
+            <div class="dash-kpi-value" id="kpi-ingresos">RD$0</div>
+            <div class="dash-kpi-delta dash-kpi-delta--up" id="kpi-ingresos-delta">23% vs ayer</div>
+          </div>
+          <div class="dash-kpi">
+            <div class="dash-kpi-label">Chats activos</div>
+            <div class="dash-kpi-value" id="kpi-chats">0</div>
+            <div class="dash-kpi-delta dash-kpi-delta--up" id="kpi-chats-delta">8 nuevos</div>
+          </div>
+        </div>
+
+        <div class="dash-chart" id="dash-chart">
+          <div class="dash-bar" data-h="30"></div>
+          <div class="dash-bar" data-h="55"></div>
+          <div class="dash-bar" data-h="42"></div>
+          <div class="dash-bar" data-h="68"></div>
+          <div class="dash-bar" data-h="85"></div>
+          <div class="dash-bar" data-h="72"></div>
+          <div class="dash-bar" data-h="95"></div>
+        </div>
+        <div class="dash-chart-labels">
+          <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         Icon row: 4 smaller features
+         ═══════════════════════════════════ -->
+    <div class="feature-card">
+      <span class="feature-label">Cobros integrados</span>
+      <div class="feature-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+      </div>
+      <h3 class="feature-title">Pagos integrados con Azul</h3>
+      <p class="feature-desc">Genera enlaces de pago directo en WhatsApp. Tu cliente paga con tarjeta en la pagina segura de Azul. Tu ves el pago confirmado al instante.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <span class="feature-label">Tu catalogo</span>
+      <div class="feature-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+      </div>
+      <h3 class="feature-title">Catalogo de productos</h3>
+      <p class="feature-desc">Sube tu catalogo con un CSV o agregalo manualmente. Precios en RD$, inventario actualizado, y tu agente siempre sabe que hay disponible.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <span class="feature-label">Seguimiento</span>
+      <div class="feature-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+      </div>
+      <h3 class="feature-title">Seguimientos automaticos</h3>
+      <p class="feature-desc">Un cliente pregunto pero no compro? VendeTo' le da seguimiento automaticamente con el mensaje correcto en el momento correcto.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <span class="feature-label">Siempre activo</span>
+      <div class="feature-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M12.01 12c0-3.57 2.2-6.62 5.31-7.87.89-.36.75-1.69-.19-1.9-1.1-.24-2.27-.18-3.37.15C10.24 3.52 7.81 6.3 7.56 10c-.26 3.82 2.33 7.14 5.93 7.88 1.22.25 2.41.18 3.49-.13.97-.28 1.15-1.6.24-1.99-3.05-1.3-5.21-4.32-5.21-7.76zM2 12c0 4.64 3.25 8.53 7.59 9.53.38.09.72-.27.6-.64C8.83 16.76 7.5 12.55 9.44 8.57c.89-1.83 2.35-3.22 4.1-4.03.37-.17.4-.7.04-.9C13.05 3.22 12.53 3 12 3c-5.52 0-10 4.03-10 9z"/></svg>
+      </div>
+      <h3 class="feature-title">Funciona 24/7</h3>
+      <p class="feature-desc">Tu negocio no cierra cuando tu duermes. VendeTo' atiende clientes a cualquier hora. Fines de semana, feriados, madrugadas.</p>
+      <a href="http://localhost:3000/demo" class="feature-cta">
+        SABER MAS
+        <svg viewBox="0 0 24 24"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+  </div>
+
+</section>
+
+<footer class="widget-footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+    Created with Perplexity Computer
+  </a>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ═══════════════════════════════════════
+     AI Agent Mini Chat Demo
+     ═══════════════════════════════════════ */
+
+  const aiMessages = [
+    { type: 'in',  text: 'Quiero un bizcocho de chocolate para 15 personas', delay: 600 },
+    { type: 'out', text: '¡Hola! Tenemos el bizcocho de chocolate para 15 personas a RD$1,450 🎂\n¿Te lo separo?', delay: 1200 },
+    { type: 'in',  text: 'Sí, y le puedes poner un mensaje?', delay: 900 },
+    { type: 'out', text: '¡Claro! Dime el mensaje y te mando el enlace de pago 👇', delay: 1000 },
+  ];
+
+  let aiPlayed = false;
+
+  function playAiDemo() {
+    if (aiPlayed) return;
+    aiPlayed = true;
+
+    const container = document.getElementById('ai-messages');
+    container.innerHTML = '';
+
+    if (prefersReducedMotion) {
+      aiMessages.forEach(msg => {
+        const el = createDemoMsg(msg);
+        el.classList.add('visible');
+        container.appendChild(el);
+      });
+      return;
+    }
+
+    let total = 300;
+    aiMessages.forEach((msg, i) => {
+      // Show typing
+      setTimeout(() => {
+        const typing = document.createElement('div');
+        typing.className = 'demo-typing' + (msg.type === 'in' ? '' : '');
+        if (msg.type === 'in') {
+          typing.style.alignSelf = 'flex-start';
+          typing.style.background = '#fff';
+        }
+        typing.innerHTML = '<div class="demo-typing-dot"></div><div class="demo-typing-dot"></div><div class="demo-typing-dot"></div>';
+        container.appendChild(typing);
+        requestAnimationFrame(() => requestAnimationFrame(() => typing.classList.add('visible')));
+
+        const typeDur = msg.type === 'out' ? 900 : 600;
+        setTimeout(() => {
+          typing.remove();
+          const el = createDemoMsg(msg);
+          container.appendChild(el);
+          requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+        }, typeDur);
+      }, total);
+
+      const typeDur = msg.type === 'out' ? 900 : 600;
+      total += msg.delay + typeDur;
+    });
+  }
+
+  function createDemoMsg(msg) {
+    const el = document.createElement('div');
+    el.className = 'demo-msg demo-msg--' + (msg.type === 'in' ? 'in' : 'out');
+    el.innerHTML = `<div style="white-space:pre-line">${msg.text}</div><div class="demo-msg-time">${msg.type === 'out' ? '3:42 PM' : '3:42 PM'}</div>`;
+    return el;
+  }
+
+  /* ═══════════════════════════════════════
+     Dashboard Animated Demo
+     ═══════════════════════════════════════ */
+
+  let dashPlayed = false;
+
+  function playDashDemo() {
+    if (dashPlayed) return;
+    dashPlayed = true;
+
+    const ventasEl = document.getElementById('kpi-ventas');
+    const ingresosEl = document.getElementById('kpi-ingresos');
+    const chatsEl = document.getElementById('kpi-chats');
+    const bars = document.querySelectorAll('#dash-chart .dash-bar');
+
+    if (prefersReducedMotion) {
+      ventasEl.textContent = '24';
+      ingresosEl.textContent = 'RD$38,400';
+      chatsEl.textContent = '12';
+      bars.forEach(bar => {
+        bar.style.height = bar.dataset.h + '%';
+        bar.classList.add('active');
+      });
+      return;
+    }
+
+    // Animate KPIs
+    animateValue(ventasEl, 0, 24, 1200, (v) => v.toString());
+    animateValue(ingresosEl, 0, 38400, 1400, (v) => 'RD$' + v.toLocaleString('es-DO'));
+    animateValue(chatsEl, 0, 12, 1000, (v) => v.toString());
+
+    // Animate bars
+    bars.forEach((bar, i) => {
+      setTimeout(() => {
+        bar.style.height = bar.dataset.h + '%';
+        bar.classList.add('active');
+      }, 200 + i * 100);
+    });
+  }
+
+  function animateValue(el, start, end, duration, fmt) {
+    const startTime = performance.now();
+    function update(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const val = Math.round(start + (end - start) * eased);
+      el.textContent = fmt(val);
+      if (t < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  /* ═══════════════════════════════════════
+     IntersectionObserver triggers
+     ═══════════════════════════════════════ */
+
+  if ('IntersectionObserver' in window) {
+    const aiObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          aiObs.disconnect();
+          setTimeout(playAiDemo, 200);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const dashObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          dashObs.disconnect();
+          setTimeout(playDashDemo, 200);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const aiCard = document.getElementById('card-ai');
+    const dashCard = document.getElementById('card-dash');
+    if (aiCard) aiObs.observe(aiCard);
+    if (dashCard) dashObs.observe(dashCard);
+  } else {
+    setTimeout(playAiDemo, 500);
+    setTimeout(playDashDemo, 500);
+  }
+
+})();
+</script>
+
+</body>
+</html>

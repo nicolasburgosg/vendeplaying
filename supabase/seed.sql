@@ -1,0 +1,2 @@
+-- Intentionally empty for now.
+-- Seed data will be added once the first runnable slices of VendeTo exist.

@@ -1,0 +1,448 @@
+@import "tailwindcss";
+
+:root {
+  --green-primary: #2D8C3C;
+  --green-dark: #1B6B2A;
+  --green-light: #E8F5E9;
+  --green-tint: #F1F9F2;
+  --off-white: #F1F1F0;
+  --black: #000000;
+  --dark-maroon: #482828;
+  --amano-blue: #1C8EEB;
+  --flame: #F04010;
+  --warning: #FFB020;
+  --neutral-gray: #A0A0A0;
+
+  --background: #F1F1F0;
+  --foreground: #000000;
+  --surface: #FFFFFF;
+  --accent: #2D8C3C;
+  --accent-strong: #1B6B2A;
+  --accent-soft: #E8F5E9;
+  --success: #2D8C3C;
+  --muted: #5C5C52;
+  --line: #DDDDD8;
+  --grid-dash: rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-green-tint: var(--green-tint);
+  --color-green-light: var(--green-light);
+  --color-green-primary: var(--green-primary);
+  --color-dark-maroon: var(--dark-maroon);
+  --color-success: var(--success);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, white);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Shell ── */
+
+.site-shell {
+  margin: 0 auto;
+  max-width: 76rem;
+  padding-inline: 1.5rem;
+}
+
+/* ── Sections ── */
+
+.site-section {
+  padding-block: 7rem;
+}
+
+@media (max-width: 768px) {
+  .site-section {
+    padding-block: 4rem;
+  }
+}
+
+/* ── Typography ── */
+
+.site-kicker {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.site-lead {
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.site-display {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.0;
+}
+
+.site-section-heading {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.site-mono-link {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 160ms ease;
+}
+
+.site-mono-link:hover {
+  color: var(--accent);
+}
+
+/* ── Background Patterns ── */
+
+.dot-grid-bg {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Dashed Borders ── */
+
+.dash-border-t {
+  border-top: 1px dashed var(--grid-dash);
+}
+
+.dash-border-b {
+  border-bottom: 1px dashed var(--grid-dash);
+}
+
+.dash-border-l {
+  border-left: 1px dashed var(--grid-dash);
+}
+
+.dash-border-r {
+  border-right: 1px dashed var(--grid-dash);
+}
+
+/* ── Buttons ── */
+
+.site-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  background: var(--foreground);
+  padding: 0.85rem 1.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--background);
+  cursor: pointer;
+  border: none;
+  transition: transform 160ms ease;
+}
+
+.site-button:hover {
+  transform: scale(1.03);
+}
+
+.site-button:active {
+  transform: scale(0.98);
+}
+
+.site-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.site-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px solid var(--foreground);
+  border-radius: 8px;
+  background: transparent;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.site-button-secondary:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.site-button-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0;
+  background: white;
+  padding: 0.85rem 1.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--foreground);
+  cursor: pointer;
+  border: none;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.site-button-white:hover {
+  background: var(--off-white);
+  transform: scale(1.03);
+}
+
+.site-button-white:active {
+  transform: scale(0.98);
+}
+
+.site-button-white-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  padding: 0.85rem 1.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: white;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.site-button-white-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Forms ── */
+
+.site-form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.site-input,
+.site-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  padding: 0.9rem 1rem;
+  color: var(--foreground);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 160ms ease;
+}
+
+.site-input:focus-visible,
+.site-textarea:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.site-textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+/* ── Cards ── */
+
+.surface-card {
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+.card-dark {
+  background: var(--dark-maroon);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: white;
+}
+
+.card-highlighted {
+  background: var(--green-tint);
+  border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 10px;
+}
+
+/* ── Lists ── */
+
+.site-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-list > li {
+  border-top: 1px solid var(--line);
+  padding-block: 1rem;
+}
+
+/* ── Notes ── */
+
+.site-note {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.75;
+}
+
+/* ── Tables ── */
+
+.site-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.site-table thead th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 0.75rem 0.75rem 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.site-table tbody td {
+  padding: 0.75rem 0.75rem 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+  vertical-align: top;
+}
+
+.site-table tbody th {
+  padding: 0.75rem 0.75rem 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.875rem;
+  font-weight: 600;
+  vertical-align: top;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* ── Dashboard labels (replaces site-kicker inside app) ── */
+
+.app-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── Sidebar nav ── */
+
+.sidebar-link-inactive {
+  color: #8A8A82;
+}
+
+.sidebar-link-inactive:hover {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* ── Dashboard sections ── */
+
+.app-section {
+  padding-block: 2.5rem;
+}
+
+.app-section + .app-section {
+  margin-top: 0.5rem;
+}
+
+/* ── Dashboard card ── */
+
+.app-card {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── Metric card ── */
+
+.site-metric {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+}

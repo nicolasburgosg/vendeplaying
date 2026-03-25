@@ -1,0 +1,23 @@
+{
+  "name": "vendeplaying",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@8.10.5",
+  "scripts": {
+    "dev:web": "pnpm --filter @vendeto/web dev",
+    "dev:api": "pnpm --filter @vendeto/api start:dev",
+    "dev:worker": "pnpm --filter @vendeto/worker start:dev",
+    "dev": "pnpm -r --parallel --filter @vendeto/web --filter @vendeto/api --filter @vendeto/worker dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.14",
+      "@types/react-dom": "19.2.3"
+    }
+  }
+}

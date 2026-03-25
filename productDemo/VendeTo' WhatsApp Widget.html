@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendeTo' — De WhatsApp a pago confirmado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   VendeTo' WhatsApp Widget — Brand Colors
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --vt-green: #48f775;
+  --vt-green-dark: #2dc45a;
+  --vt-green-light: #e0fde9;
+  --vt-green-tint: #f0fef4;
+  --vt-offwhite: #F0F0E8;
+  --vt-black: #000000;
+  --vt-dark-maroon: #482828;
+
+  /* WhatsApp chat colors */
+  --chat-bg: #ECE5DD;
+  --bubble-incoming: #FFFFFF;
+  --bubble-outgoing: #48f775;
+  --bubble-outgoing-text: #0a2614;
+  --bubble-incoming-text: #1A1A1A;
+  --timestamp-color: #8A8D91;
+  --timestamp-outgoing: rgba(10,38,20,0.55);
+
+  /* Phone mockup */
+  --phone-bezel: #1A1A1A;
+  --phone-screen-radius: 36px;
+  --phone-width: 320px;
+  --phone-height: 640px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #FFFFFF;
+  color: var(--vt-black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════
+   Layout — Desktop: side by side / Mobile: stacked
+   ═══════════════════════════════════════════════════ */
+
+.vendeto-widget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 48px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.phone-container {
+  flex-shrink: 0;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 220px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Phone Mockup — CSS-only realistic frame
+   ═══════════════════════════════════════════════════ */
+
+.phone-mockup {
+  width: var(--phone-width);
+  height: var(--phone-height);
+  background: var(--phone-bezel);
+  border-radius: 44px;
+  padding: 12px;
+  position: relative;
+  box-shadow:
+    0 0 0 2px #333,
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 8px 20px rgba(0, 0, 0, 0.15),
+    inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* Notch */
+.phone-mockup::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: var(--phone-bezel);
+  border-radius: 0 0 18px 18px;
+  z-index: 20;
+}
+
+/* Camera dot in notch */
+.phone-mockup::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%) translateX(30px);
+  width: 10px;
+  height: 10px;
+  background: #2A2A2A;
+  border-radius: 50%;
+  z-index: 21;
+  box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--chat-bg);
+  border-radius: var(--phone-screen-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════
+   Status Bar
+   ═══════════════════════════════════════════════════ */
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0a2614;
+  background: var(--vt-green);
+  position: relative;
+  z-index: 10;
+}
+
+.status-bar-time {
+  letter-spacing: 0.3px;
+}
+
+.status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-bar-icons svg {
+  width: 15px;
+  height: 15px;
+  fill: #0a2614;
+}
+
+/* ═══════════════════════════════════════════════════
+   Chat Header
+   ═══════════════════════════════════════════════════ */
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 10px;
+  background: var(--vt-green-dark);
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.chat-header-back {
+  width: 20px;
+  height: 20px;
+  fill: #FFFFFF;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.chat-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--vt-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0a2614;
+}
+
+.chat-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-header-name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.chat-header-status {
+  font-size: 11px;
+  opacity: 0.85;
+  line-height: 1.2;
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.chat-header-actions svg {
+  width: 18px;
+  height: 18px;
+  fill: #FFFFFF;
+  opacity: 0.9;
+}
+
+/* ═══════════════════════════════════════════════════
+   Chat Body
+   ═══════════════════════════════════════════════════ */
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: var(--chat-bg);
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 3a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zm30 0a2 2 0 0 1 2 2v2a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2zM5 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm50 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-15 20a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm30 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM30 45a2 2 0 1 1 0 4 2 2 0 0 1 0-4z' fill='%23D4CCBA' fill-opacity='0.25'/%3E%3C/svg%3E");
+  scrollbar-width: none;
+}
+
+.chat-body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Date badge */
+.chat-date {
+  align-self: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: #54656F;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+/* ═══════════════════════════════════════════════════
+   Message Bubbles
+   ═══════════════════════════════════════════════════ */
+
+.message {
+  max-width: 82%;
+  padding: 6px 10px 4px;
+  border-radius: 10px;
+  position: relative;
+  line-height: 1.4;
+  font-size: 14px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  word-wrap: break-word;
+  margin-bottom: 2px;
+}
+
+.message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion: no animation */
+@media (prefers-reduced-motion: reduce) {
+  .message {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.message-incoming {
+  align-self: flex-start;
+  background: var(--bubble-incoming);
+  color: var(--bubble-incoming-text);
+  border-top-left-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+.message-outgoing {
+  align-self: flex-end;
+  background: var(--bubble-outgoing);
+  color: var(--bubble-outgoing-text);
+  border-top-right-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+}
+
+.message-text {
+  white-space: pre-line;
+}
+
+.message-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  font-size: 10.5px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.message-outgoing .message-time {
+  color: rgba(10,38,20,0.55);
+}
+
+.message-incoming .message-time {
+  color: var(--timestamp-color);
+}
+
+/* Double check for outgoing */
+.message-check {
+  display: inline-flex;
+}
+
+.message-check svg {
+  width: 14px;
+  height: 14px;
+  fill: rgba(10,38,20,0.55);
+}
+
+/* ═══════════════════════════════════════════════════
+   Payment Link Card
+   ═══════════════════════════════════════════════════ */
+
+.payment-card {
+  max-width: 82%;
+  align-self: flex-end;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  margin-bottom: 2px;
+}
+
+.payment-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.payment-card-inner {
+  background: #FFFFFF;
+  border: 2px solid var(--vt-green);
+  border-radius: 0;
+  padding: 14px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.payment-card-inner:hover {
+  background: var(--vt-green-tint);
+}
+
+.payment-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vt-green);
+}
+
+.payment-card-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--vt-green);
+  flex-shrink: 0;
+}
+
+.payment-card-sub {
+  font-size: 11px;
+  color: #8A8D91;
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Typing Indicator
+   ═══════════════════════════════════════════════════ */
+
+.typing-indicator {
+  align-self: flex-start;
+  background: var(--bubble-incoming);
+  padding: 10px 16px;
+  border-radius: 10px;
+  border-top-left-radius: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+}
+
+.typing-indicator.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.typing-indicator.outgoing {
+  align-self: flex-end;
+  background: var(--bubble-outgoing);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 2px;
+}
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #A0A5AA;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-indicator.outgoing .typing-dot {
+  background: rgba(10,38,20,0.35);
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot { animation: none; opacity: 0.6; }
+  .typing-indicator {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Chat Input Bar
+   ═══════════════════════════════════════════════════ */
+
+.chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--chat-bg);
+  flex-shrink: 0;
+}
+
+.chat-input-field {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #8A8D91;
+  border: none;
+  outline: none;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-input-mic {
+  width: 36px;
+  height: 36px;
+  background: var(--vt-green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chat-input-mic svg {
+  width: 18px;
+  height: 18px;
+  fill: #FFFFFF;
+}
+
+/* ═══════════════════════════════════════════════════
+   Step Indicators
+   ═══════════════════════════════════════════════════ */
+
+.step-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #F7F7F5;
+  border: 1.5px solid #E5E5E0;
+  transition: all 0.4s ease;
+  min-width: 220px;
+  overflow: hidden;
+}
+
+.step-item.active {
+  background: var(--vt-green-light);
+  border-color: var(--vt-green);
+  box-shadow: none;
+}
+
+.step-item.completed {
+  background: var(--vt-green-tint);
+  border-color: rgba(72, 247, 117, 0.4);
+}
+
+.step-number {
+  width: 48px;
+  min-height: 48px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  background: #E5E5E0;
+  color: #7A7A74;
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+  border-right: 1.5px solid #E5E5E0;
+  align-self: stretch;
+}
+
+.step-item.active .step-number {
+  background: var(--vt-green);
+  color: #0a2614;
+  border-right-color: var(--vt-green);
+}
+
+.step-item.completed .step-number {
+  background: var(--vt-green);
+  color: #0a2614;
+  border-right-color: rgba(72, 247, 117, 0.4);
+}
+
+.step-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #7A7A74;
+  transition: color 0.4s ease;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+}
+
+.step-item.active .step-label {
+  color: #000000;
+  font-weight: 600;
+}
+
+.step-item.completed .step-label {
+  color: #000000;
+}
+
+/* ═══════════════════════════════════════════════════
+   Replay Button
+   ═══════════════════════════════════════════════════ */
+
+.replay-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 24px;
+  background: var(--vt-green);
+  color: #0a2614;
+  border: none;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  width: 100%;
+}
+
+.replay-btn:hover {
+  background: var(--vt-green-dark);
+}
+
+.replay-btn:active {
+  transform: scale(0.97);
+}
+
+.replay-btn.show {
+  display: flex;
+}
+
+.replay-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: #0a2614;
+}
+
+/* ═══════════════════════════════════════════════════
+   Responsive — Mobile
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 700px) {
+  .vendeto-widget {
+    flex-direction: column;
+    gap: 32px;
+    padding: 32px 16px;
+  }
+
+  .steps-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-width: unset;
+    width: 100%;
+  }
+
+  .step-item {
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    min-width: unset;
+    flex: 1;
+    min-width: 70px;
+    max-width: 100px;
+    text-align: center;
+  }
+
+  .step-number {
+    width: 100%;
+    min-height: 36px;
+    height: 36px;
+    font-size: 12px;
+    border-right: none;
+    border-bottom: 1.5px solid #E5E5E0;
+  }
+
+  .step-item.active .step-number {
+    border-right: none;
+    border-bottom-color: var(--vt-green);
+  }
+
+  .step-item.completed .step-number {
+    border-right: none;
+    border-bottom-color: rgba(72, 247, 117, 0.4);
+  }
+
+  .step-label {
+    padding: 8px 6px;
+    justify-content: center;
+  }
+
+  .step-label {
+    font-size: 11px;
+  }
+
+  .phone-mockup {
+    width: 290px;
+    height: 590px;
+  }
+
+  .replay-btn {
+    max-width: 290px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   Home bar at bottom of phone
+   ═══════════════════════════════════════════════════ */
+
+.home-indicator {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chat-bg);
+  flex-shrink: 0;
+}
+
+.home-indicator-bar {
+  width: 120px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.2);
+}
+
+/* Footer attribution */
+.widget-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 11px;
+  color: #8A8D91;
+}
+
+.widget-footer a {
+  color: #8A8D91;
+  text-decoration: underline;
+  text-decoration-color: rgba(138, 141, 145, 0.3);
+}
+
+.widget-footer a:hover {
+  color: #54656F;
+}
+</style>
+</head>
+<body>
+
+<div class="vendeto-widget" id="vendeto-widget">
+  <!-- Phone Mockup -->
+  <div class="phone-container">
+    <div class="phone-mockup">
+      <div class="phone-screen">
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <span class="status-bar-time">3:42 PM</span>
+          <div class="status-bar-icons">
+            <!-- Signal -->
+            <svg viewBox="0 0 24 24"><path d="M2 22h2V12H2v10zm4 0h2V8H6v14zm4 0h2V4h-2v18zm4 0h2V2h-2v20z" opacity="0.9"/></svg>
+            <!-- WiFi -->
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+            <!-- Battery -->
+            <svg viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+          </div>
+        </div>
+
+        <!-- Chat Header -->
+        <div class="chat-header">
+          <svg class="chat-header-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          <div class="chat-header-avatar">V</div>
+          <div class="chat-header-info">
+            <div class="chat-header-name">VendeTo'</div>
+            <div class="chat-header-status">en línea</div>
+          </div>
+          <div class="chat-header-actions">
+            <!-- Video call -->
+            <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            <!-- Phone call -->
+            <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            <!-- More -->
+            <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          </div>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="chat-body" id="chat-body">
+          <div class="chat-date">Hoy</div>
+          <!-- Messages injected by JS -->
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-bar">
+          <div class="chat-input-field">Escribe un mensaje...</div>
+          <div class="chat-input-mic">
+            <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+          </div>
+        </div>
+
+        <!-- Home Indicator -->
+        <div class="home-indicator">
+          <div class="home-indicator-bar"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Replay Button -->
+    <button class="replay-btn" id="replay-btn" aria-label="Repetir conversación">
+      <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+      Repetir
+    </button>
+  </div>
+
+  <!-- Step Indicators -->
+  <div class="steps-container" id="steps-container">
+    <div class="step-item" id="step-1">
+      <div class="step-number">1</div>
+      <div class="step-label">Consulta</div>
+    </div>
+    <div class="step-item" id="step-2">
+      <div class="step-number">2</div>
+      <div class="step-label">Pedido</div>
+    </div>
+    <div class="step-item" id="step-3">
+      <div class="step-number">3</div>
+      <div class="step-label">Pago</div>
+    </div>
+    <div class="step-item" id="step-4">
+      <div class="step-number">4</div>
+      <div class="step-label">Confirmación</div>
+    </div>
+  </div>
+</div>
+
+<footer class="widget-footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+    Created with Perplexity Computer
+  </a>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ═══════════════════════════════════════════════════
+     Conversation Script
+     ═══════════════════════════════════════════════════ */
+
+  const conversation = [
+    {
+      type: 'incoming',
+      text: 'Hola! Tienen el pastel de tres leches disponible?',
+      time: '3:42 PM',
+      step: 1,
+      delay: 800
+    },
+    {
+      type: 'outgoing',
+      text: '¡Hola! Sí, tenemos el tres leches disponible 🎂\nTamaño regular: RD$1,200\nTamaño grande: RD$1,850\n¿Cuál te gustaría?',
+      time: '3:42 PM',
+      step: 1,
+      delay: 1400
+    },
+    {
+      type: 'incoming',
+      text: 'El grande por favor',
+      time: '3:43 PM',
+      step: 2,
+      delay: 1000
+    },
+    {
+      type: 'outgoing',
+      text: '¡Perfecto! Tu pedido:\n🍰 Tres leches grande — RD$1,850\n\nAquí tienes tu enlace de pago 👇',
+      time: '3:43 PM',
+      step: 2,
+      delay: 1200
+    },
+    {
+      type: 'payment',
+      text: 'Pagar RD$1,850 con Azul',
+      time: '3:43 PM',
+      step: 3,
+      delay: 600
+    },
+    {
+      type: 'incoming',
+      text: 'Listo, ya pagué ✅',
+      time: '3:44 PM',
+      step: 4,
+      delay: 1500
+    },
+    {
+      type: 'outgoing',
+      text: '✅ ¡Pago confirmado! RD$1,850 recibidos.\nTu pedido está en camino. ¡Gracias por tu compra! 🎉',
+      time: '3:44 PM',
+      step: 4,
+      delay: 1200
+    }
+  ];
+
+  const chatBody = document.getElementById('chat-body');
+  const replayBtn = document.getElementById('replay-btn');
+  const widget = document.getElementById('vendeto-widget');
+
+  let isPlaying = false;
+  let hasPlayed = false;
+  let currentTimeout = null;
+  let timeouts = [];
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ═══════════════════════════════════════════════════
+     SVG Templates
+     ═══════════════════════════════════════════════════ */
+
+  const checkSVG = `<svg viewBox="0 0 16 11" width="14" height="11"><path d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 0 0-.336-.146.47.47 0 0 0-.343.146l-.311.31a.445.445 0 0 0-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 0 0 .501.203.697.697 0 0 0 .546-.266l6.646-8.417a.497.497 0 0 0 .108-.299.441.441 0 0 0-.14-.305l-.387-.342z" fill="currentColor"/></svg><svg viewBox="0 0 16 11" width="14" height="11" style="margin-left:-8px"><path d="M11.071.653a.457.457 0 0 0-.304-.102.493.493 0 0 0-.381.178l-6.19 7.636-2.405-2.272a.463.463 0 0 0-.336-.146.47.47 0 0 0-.343.146l-.311.31a.445.445 0 0 0-.14.337c0 .136.047.25.14.343l2.996 2.996a.724.724 0 0 0 .501.203.697.697 0 0 0 .546-.266l6.646-8.417a.497.497 0 0 0 .108-.299.441.441 0 0 0-.14-.305l-.387-.342z" fill="currentColor"/></svg>`;
+
+  const linkSVG = `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" fill="currentColor"/></svg>`;
+
+  /* ═══════════════════════════════════════════════════
+     Create Message Elements
+     ═══════════════════════════════════════════════════ */
+
+  function createMessageEl(msg) {
+    if (msg.type === 'payment') {
+      return createPaymentCard(msg);
+    }
+
+    const el = document.createElement('div');
+    el.className = `message message-${msg.type === 'incoming' ? 'incoming' : 'outgoing'}`;
+
+    const textEl = document.createElement('div');
+    textEl.className = 'message-text';
+    textEl.textContent = msg.text;
+    el.appendChild(textEl);
+
+    const timeEl = document.createElement('div');
+    timeEl.className = 'message-time';
+    timeEl.innerHTML = msg.time;
+
+    if (msg.type === 'outgoing') {
+      timeEl.innerHTML += `<span class="message-check">${checkSVG}</span>`;
+    }
+
+    el.appendChild(timeEl);
+    return el;
+  }
+
+  function createPaymentCard(msg) {
+    const el = document.createElement('div');
+    el.className = 'payment-card';
+
+    el.innerHTML = `
+      <div class="payment-card-inner">
+        <div class="payment-card-icon">
+          ${linkSVG}
+          <span>${msg.text}</span>
+        </div>
+        <div class="payment-card-sub">pay.vendeto.com • Enlace seguro</div>
+      </div>
+    `;
+
+    return el;
+  }
+
+  function createTypingIndicator(isOutgoing) {
+    const el = document.createElement('div');
+    el.className = 'typing-indicator' + (isOutgoing ? ' outgoing' : '');
+    el.innerHTML = `
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    `;
+    return el;
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Step Management
+     ═══════════════════════════════════════════════════ */
+
+  function setStep(stepNum) {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'completed');
+      if (i < stepNum) {
+        el.classList.add('completed');
+      } else if (i === stepNum) {
+        el.classList.add('active');
+      }
+    }
+  }
+
+  function resetSteps() {
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.remove('active', 'completed');
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Scroll Chat to Bottom
+     ═══════════════════════════════════════════════════ */
+
+  function scrollToBottom() {
+    chatBody.scrollTo({
+      top: chatBody.scrollHeight,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Clear Chat
+     ═══════════════════════════════════════════════════ */
+
+  function clearChat() {
+    // Remove all messages and typing indicators, keep the date badge
+    const children = Array.from(chatBody.children);
+    children.forEach(child => {
+      if (!child.classList.contains('chat-date')) {
+        child.remove();
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Play Conversation
+     ═══════════════════════════════════════════════════ */
+
+  function playConversation() {
+    if (isPlaying) return;
+    isPlaying = true;
+    hasPlayed = true;
+    replayBtn.classList.remove('show');
+    clearChat();
+    resetSteps();
+
+    // If reduced motion, show all at once
+    if (prefersReducedMotion) {
+      showAllAtOnce();
+      return;
+    }
+
+    let totalDelay = 400; // initial delay
+
+    conversation.forEach((msg, index) => {
+      const isOutgoing = msg.type === 'outgoing' || msg.type === 'payment';
+      const typingDuration = isOutgoing ? 1000 : 700;
+
+      // Show typing indicator
+      timeouts.push(setTimeout(() => {
+        setStep(msg.step);
+        const typing = createTypingIndicator(isOutgoing);
+        chatBody.appendChild(typing);
+        scrollToBottom();
+
+        // Make typing visible
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            typing.classList.add('visible');
+          });
+        });
+
+        // Replace typing with message
+        timeouts.push(setTimeout(() => {
+          typing.remove();
+          const messageEl = createMessageEl(msg);
+          chatBody.appendChild(messageEl);
+          scrollToBottom();
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              messageEl.classList.add('visible');
+              scrollToBottom();
+            });
+          });
+
+          // Check if last message
+          if (index === conversation.length - 1) {
+            // Mark step 4 completed after a beat
+            timeouts.push(setTimeout(() => {
+              for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('step-' + i);
+                el.classList.remove('active');
+                el.classList.add('completed');
+              }
+              isPlaying = false;
+              replayBtn.classList.add('show');
+            }, 800));
+          }
+        }, typingDuration));
+
+      }, totalDelay));
+
+      totalDelay += msg.delay + typingDuration;
+    });
+  }
+
+  function showAllAtOnce() {
+    conversation.forEach((msg) => {
+      const messageEl = createMessageEl(msg);
+      messageEl.classList.add('visible');
+      chatBody.appendChild(messageEl);
+    });
+
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('step-' + i);
+      el.classList.add('completed');
+    }
+
+    scrollToBottom();
+    isPlaying = false;
+    replayBtn.classList.add('show');
+  }
+
+  /* ═══════════════════════════════════════════════════
+     Replay
+     ═══════════════════════════════════════════════════ */
+
+  replayBtn.addEventListener('click', () => {
+    // Clear any pending timeouts
+    timeouts.forEach(t => clearTimeout(t));
+    timeouts = [];
+    isPlaying = false;
+    playConversation();
+  });
+
+  /* ═══════════════════════════════════════════════════
+     IntersectionObserver — Auto-play when in view
+     ═══════════════════════════════════════════════════ */
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasPlayed && !isPlaying) {
+          observer.disconnect();
+          // Small delay so the user sees the empty phone first
+          setTimeout(() => playConversation(), 300);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    observer.observe(widget);
+  } else {
+    // Fallback: play after a short delay
+    setTimeout(() => playConversation(), 500);
+  }
+
+})();
+</script>
+
+</body>
+</html>
