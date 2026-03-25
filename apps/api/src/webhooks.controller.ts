@@ -630,34 +630,75 @@ export class WebhooksController {
         return;
       }
 
-      const conversationResult = await client.query<{
+      const existingConversationResult = await client.query<{
         id: string;
         ai_paused: boolean;
       }>(
         `
-          insert into public.conversations (
-            organization_id,
-            channel_id,
-            customer_id,
-            status,
-            lead_temperature,
-            last_customer_message_at,
-            last_message_at
-          )
-          values ($1, $2, $3, 'open', 'warm', $4::timestamptz, $4::timestamptz)
-          on conflict (organization_id, channel_id, customer_id)
-          where status in ('open', 'waiting_customer', 'waiting_human', 'awaiting_payment', 'paid')
-          do update set
-            status = 'open',
-            last_customer_message_at = excluded.last_customer_message_at,
-            last_message_at = excluded.last_message_at,
-            updated_at = now()
-          returning id, ai_paused
+          select id, ai_paused
+          from public.conversations
+          where organization_id = $1
+            and channel_id = $2
+            and customer_id = $3
+            and status in ('open', 'waiting_customer', 'waiting_human', 'awaiting_payment', 'paid')
+          order by created_at asc
+          limit 1
+          for update
         `,
-        [params.organizationId, params.channelId, customerId, occurredAt],
+        [params.organizationId, params.channelId, customerId],
       );
 
-      const conversation = conversationResult.rows[0];
+      let conversation = existingConversationResult.rows[0];
+
+      if (conversation) {
+        const conversationUpdateResult = await client.query<{
+          id: string;
+          ai_paused: boolean;
+        }>(
+          `
+            update public.conversations
+            set
+              status = 'open',
+              last_customer_message_at = $4::timestamptz,
+              last_message_at = $4::timestamptz,
+              updated_at = now()
+            where organization_id = $1
+              and channel_id = $2
+              and id = $3
+            returning id, ai_paused
+          `,
+          [
+            params.organizationId,
+            params.channelId,
+            conversation.id,
+            occurredAt,
+          ],
+        );
+
+        conversation = conversationUpdateResult.rows[0] ?? conversation;
+      } else {
+        const conversationInsertResult = await client.query<{
+          id: string;
+          ai_paused: boolean;
+        }>(
+          `
+            insert into public.conversations (
+              organization_id,
+              channel_id,
+              customer_id,
+              status,
+              lead_temperature,
+              last_customer_message_at,
+              last_message_at
+            )
+            values ($1, $2, $3, 'open', 'warm', $4::timestamptz, $4::timestamptz)
+            returning id, ai_paused
+          `,
+          [params.organizationId, params.channelId, customerId, occurredAt],
+        );
+
+        conversation = conversationInsertResult.rows[0];
+      }
 
       if (!conversation) {
         return;
@@ -665,66 +706,104 @@ export class WebhooksController {
 
       const conversationId = conversation.id;
 
-      const messageResult = await client.query<{ id: string }>(
+      const messagePayload = JSON.stringify({
+        source: 'kapso_meta_webhook',
+        raw_message: params.message,
+        raw_contact: contact,
+      });
+      const existingMessageResult = await client.query<{ id: string }>(
         `
-          insert into public.messages (
-            organization_id,
-            channel_id,
-            conversation_id,
-            customer_id,
-            provider_message_id,
-            direction,
-            sender_type,
-            body,
-            message_type,
-            current_status,
-            current_status_at,
-            external_created_at,
-            payload
-          )
-          values (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            'inbound',
-            'customer',
-            $6,
-            $7,
-            'received',
-            $8::timestamptz,
-            $8::timestamptz,
-            $9::jsonb
-          )
-          on conflict (channel_id, provider_message_id)
-          do update set
-            body = excluded.body,
-            message_type = excluded.message_type,
-            current_status = 'received',
-            current_status_at = excluded.current_status_at,
-            external_created_at = coalesce(public.messages.external_created_at, excluded.external_created_at),
-            payload = coalesce(public.messages.payload, '{}'::jsonb) || excluded.payload
-          returning id
+          select id
+          from public.messages
+          where organization_id = $1
+            and channel_id = $2
+            and provider_message_id = $3
+          limit 1
+          for update
         `,
-        [
-          params.organizationId,
-          params.channelId,
-          conversationId,
-          customerId,
-          providerMessageId,
-          body,
-          messageType,
-          occurredAt,
-          JSON.stringify({
-            source: 'kapso_meta_webhook',
-            raw_message: params.message,
-            raw_contact: contact,
-          }),
-        ],
+        [params.organizationId, params.channelId, providerMessageId],
       );
 
-      const messageId = messageResult.rows[0]?.id;
+      let messageId: string | null = null;
+
+      if (existingMessageResult.rows[0]) {
+        const messageUpdateResult = await client.query<{ id: string }>(
+          `
+            update public.messages
+            set
+              body = $4,
+              message_type = $5,
+              current_status = 'received',
+              current_status_at = $6::timestamptz,
+              external_created_at = coalesce(external_created_at, $6::timestamptz),
+              payload = coalesce(payload, '{}'::jsonb) || $7::jsonb
+            where organization_id = $1
+              and channel_id = $2
+              and id = $3
+            returning id
+          `,
+          [
+            params.organizationId,
+            params.channelId,
+            existingMessageResult.rows[0].id,
+            body,
+            messageType,
+            occurredAt,
+            messagePayload,
+          ],
+        );
+
+        messageId = messageUpdateResult.rows[0]?.id ?? existingMessageResult.rows[0].id;
+      } else {
+        const messageInsertResult = await client.query<{ id: string }>(
+          `
+            insert into public.messages (
+              organization_id,
+              channel_id,
+              conversation_id,
+              customer_id,
+              provider_message_id,
+              direction,
+              sender_type,
+              body,
+              message_type,
+              current_status,
+              current_status_at,
+              external_created_at,
+              payload
+            )
+            values (
+              $1,
+              $2,
+              $3,
+              $4,
+              $5,
+              'inbound',
+              'customer',
+              $6,
+              $7,
+              'received',
+              $8::timestamptz,
+              $8::timestamptz,
+              $9::jsonb
+            )
+            returning id
+          `,
+          [
+            params.organizationId,
+            params.channelId,
+            conversationId,
+            customerId,
+            providerMessageId,
+            body,
+            messageType,
+            occurredAt,
+            messagePayload,
+          ],
+        );
+
+        messageId = messageInsertResult.rows[0]?.id ?? null;
+      }
 
       if (!messageId) {
         return;
@@ -744,7 +823,7 @@ export class WebhooksController {
             occurred_at,
             metadata
           )
-          values (
+          select
             $1,
             $2,
             $3,
@@ -755,9 +834,12 @@ export class WebhooksController {
             'kapso_meta_inbound',
             $7::timestamptz,
             $8::jsonb
+          where not exists (
+            select 1
+            from public.message_status_events
+            where message_id = $2
+              and provider_event_id = $6
           )
-          on conflict (message_id, provider_event_id)
-          do nothing
         `,
         [
           params.organizationId,
@@ -887,7 +969,7 @@ export class WebhooksController {
             error_payload,
             metadata
           )
-          values (
+          select
             $1,
             $2,
             $3,
@@ -901,9 +983,12 @@ export class WebhooksController {
             $11,
             $12::jsonb,
             $13::jsonb
+          where not exists (
+            select 1
+            from public.message_status_events
+            where message_id = $2
+              and provider_event_id = $6
           )
-          on conflict (message_id, provider_event_id)
-          do nothing
         `,
         [
           params.organizationId,
