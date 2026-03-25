@@ -24,10 +24,22 @@ type ScheduleJobInput = {
   paymentAttemptId?: string | null;
 };
 
+const JOB_WAKE_CHANNEL = "vendeto_scheduled_jobs";
+
 async function insertScheduledJob(
   client: PoolClient,
   input: ScheduleJobInput,
 ) {
+  const priority =
+    input.priority ??
+    (input.jobType === "send_whatsapp_message"
+      ? 250
+      : input.payload?.action === "auto_reply_inbound"
+        ? 300
+        : input.payload?.action === "refresh_conversation_summary"
+          ? 10
+          : 100);
+
   await client.query(
     `
       with updated as (
@@ -80,7 +92,7 @@ async function insertScheduledJob(
     [
       input.organizationId,
       input.jobType,
-      input.priority ?? 100,
+      priority,
       input.availableAt ?? null,
       input.maxAttempts ?? 5,
       input.dedupeKey ?? null,
@@ -92,6 +104,15 @@ async function insertScheduledJob(
       JSON.stringify(input.payload ?? {}),
     ],
   );
+
+  await client.query(`select pg_notify($1, $2)`, [
+    JOB_WAKE_CHANNEL,
+    JSON.stringify({
+      organizationId: input.organizationId,
+      jobType: input.jobType,
+      action: typeof input.payload?.action === "string" ? input.payload.action : null,
+    }),
+  ]);
 }
 
 export async function enqueueScheduledJob(input: ScheduleJobInput) {
@@ -203,6 +224,8 @@ export async function scheduleConversationSummary(params: {
   await enqueueScheduledJob({
     organizationId: params.organizationId,
     jobType: "generic",
+    priority: 10,
+    availableAt: new Date(Date.now() + 15_000).toISOString(),
     dedupeKey: `${params.organizationId}:summary:${params.conversationId}`,
     conversationId: params.conversationId,
     payload: {

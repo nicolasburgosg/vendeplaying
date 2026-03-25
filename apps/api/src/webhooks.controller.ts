@@ -21,6 +21,8 @@ type ProviderStatusError = {
   payload: Record<string, unknown>;
 };
 
+const JOB_WAKE_CHANNEL = 'vendeto_scheduled_jobs';
+
 function stringifyPayload(payload: unknown) {
   return JSON.stringify(payload ?? {});
 }
@@ -855,21 +857,11 @@ export class WebhooksController {
         ],
       );
 
-      await this.insertScheduledJob(client, {
-        organizationId: params.organizationId,
-        jobType: 'generic',
-        dedupeKey: `${params.organizationId}:summary:${conversationId}`,
-        conversationId,
-        customerId,
-        payload: {
-          action: 'refresh_conversation_summary',
-        },
-      });
-
       if (!conversation.ai_paused) {
         await this.insertScheduledJob(client, {
           organizationId: params.organizationId,
           jobType: 'generic',
+          priority: 300,
           dedupeKey: `${params.organizationId}:auto-reply:${messageId}`,
           conversationId,
           customerId,
@@ -879,6 +871,19 @@ export class WebhooksController {
           },
         });
       }
+
+      await this.insertScheduledJob(client, {
+        organizationId: params.organizationId,
+        jobType: 'generic',
+        priority: 10,
+        availableAt: new Date(Date.now() + 15_000).toISOString(),
+        dedupeKey: `${params.organizationId}:summary:${conversationId}`,
+        conversationId,
+        customerId,
+        payload: {
+          action: 'refresh_conversation_summary',
+        },
+      });
     });
   }
 
@@ -1121,6 +1126,14 @@ export class WebhooksController {
       paymentAttemptId?: string | null;
     },
   ) {
+    const priority =
+      input.priority ??
+      (input.payload?.action === 'auto_reply_inbound'
+        ? 300
+        : input.payload?.action === 'refresh_conversation_summary'
+          ? 10
+          : 100);
+
     await client.query(
       `
         with updated as (
@@ -1173,7 +1186,7 @@ export class WebhooksController {
       [
         input.organizationId,
         input.jobType,
-        input.priority ?? 100,
+        priority,
         input.availableAt ?? null,
         input.maxAttempts ?? 5,
         input.dedupeKey ?? null,
@@ -1185,5 +1198,15 @@ export class WebhooksController {
         JSON.stringify(input.payload ?? {}),
       ],
     );
+
+    await client.query(`select pg_notify($1, $2)`, [
+      JOB_WAKE_CHANNEL,
+      JSON.stringify({
+        organizationId: input.organizationId,
+        jobType: input.jobType,
+        action:
+          typeof input.payload?.action === 'string' ? input.payload.action : null,
+      }),
+    ]);
   }
 }

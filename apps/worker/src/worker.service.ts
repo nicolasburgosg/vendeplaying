@@ -1,10 +1,12 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
-import type { PoolClient } from 'pg';
+import type { Client as PgClient, PoolClient } from 'pg';
 import { AiService } from './ai.service';
 import { DatabaseService } from './database.service';
 
 const KAPSO_WHATSAPP_API_BASE_URL = 'https://api.kapso.ai/meta/whatsapp/v24.0';
+const JOB_WAKE_CHANNEL = 'vendeto_scheduled_jobs';
+const POLL_INTERVAL_MS = 1_000;
 
 type JobRow = {
   id: string;
@@ -39,7 +41,9 @@ export class WorkerService implements OnModuleDestroy {
   private readonly logger = new Logger(WorkerService.name);
   private readonly workerId = `vendeto-worker-${process.pid}`;
   private poller: NodeJS.Timeout | null = null;
+  private listener: PgClient | null = null;
   private running = false;
+  private pendingTick = false;
 
   constructor(
     private readonly database: DatabaseService,
@@ -48,10 +52,44 @@ export class WorkerService implements OnModuleDestroy {
 
   start() {
     this.logger.log('Worker de VendeTo iniciado.');
-    void this.tick();
+    void this.startListener();
+    this.requestTick();
     this.poller = setInterval(() => {
-      void this.tick();
-    }, 5_000);
+      this.requestTick();
+    }, POLL_INTERVAL_MS);
+  }
+
+  private async startListener() {
+    try {
+      this.listener = await this.database.createListenerClient();
+      this.listener.on('notification', (message) => {
+        if (message.channel === JOB_WAKE_CHANNEL) {
+          this.requestTick();
+        }
+      });
+      this.listener.on('error', (error) => {
+        this.logger.warn(
+          `Falló el listener de jobs en tiempo real. Seguimos con polling: ${error.message}`,
+        );
+      });
+      await this.listener.query(`listen ${JOB_WAKE_CHANNEL}`);
+      this.logger.log('Listener de jobs en tiempo real listo.');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'error desconocido al iniciar listener';
+      this.logger.warn(
+        `No pudimos activar el listener en tiempo real. Seguimos con polling: ${message}`,
+      );
+    }
+  }
+
+  private requestTick() {
+    if (this.running) {
+      this.pendingTick = true;
+      return;
+    }
+
+    void this.tick();
   }
 
   private async tick() {
@@ -71,6 +109,13 @@ export class WorkerService implements OnModuleDestroy {
       this.logger.error('No pudimos ejecutar el ciclo del worker.', error);
     } finally {
       this.running = false;
+
+      if (this.pendingTick) {
+        this.pendingTick = false;
+        queueMicrotask(() => {
+          this.requestTick();
+        });
+      }
     }
   }
 
@@ -1073,6 +1118,7 @@ export class WorkerService implements OnModuleDestroy {
         jobType: 'send_whatsapp_message',
         conversationId,
         customerId,
+        priority: 250,
         dedupeKey: `${organizationId}:send:${outboundMessageId}`,
         payload: {
           messageId: outboundMessageId,
@@ -1085,6 +1131,8 @@ export class WorkerService implements OnModuleDestroy {
         jobType: 'generic',
         conversationId,
         customerId,
+        priority: 10,
+        availableAt: new Date(Date.now() + 15_000).toISOString(),
         dedupeKey: `${organizationId}:summary:${conversationId}`,
         payload: {
           action: 'refresh_conversation_summary',
@@ -1512,6 +1560,16 @@ export class WorkerService implements OnModuleDestroy {
       paymentAttemptId?: string | null;
     },
   ) {
+    const priority =
+      input.priority ??
+      (input.jobType === 'send_whatsapp_message'
+        ? 250
+        : input.payload?.action === 'auto_reply_inbound'
+          ? 300
+          : input.payload?.action === 'refresh_conversation_summary'
+            ? 10
+            : 100);
+
     await client.query(
       `
         with updated as (
@@ -1564,7 +1622,7 @@ export class WorkerService implements OnModuleDestroy {
       [
         input.organizationId,
         input.jobType,
-        input.priority ?? 100,
+        priority,
         input.availableAt ?? null,
         input.maxAttempts ?? 5,
         input.dedupeKey ?? null,
@@ -1576,6 +1634,16 @@ export class WorkerService implements OnModuleDestroy {
         JSON.stringify(input.payload ?? {}),
       ],
     );
+
+    await client.query(`select pg_notify($1, $2)`, [
+      JOB_WAKE_CHANNEL,
+      JSON.stringify({
+        organizationId: input.organizationId,
+        jobType: input.jobType,
+        action:
+          typeof input.payload?.action === 'string' ? input.payload.action : null,
+      }),
+    ]);
   }
 
   private async cancelConversationFollowUpsInTransaction(
@@ -1770,10 +1838,19 @@ export class WorkerService implements OnModuleDestroy {
     return typeof value === 'string' ? value : null;
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     if (this.poller) {
       clearInterval(this.poller);
       this.poller = null;
+    }
+
+    if (this.listener) {
+      try {
+        await this.listener.query(`unlisten ${JOB_WAKE_CHANNEL}`);
+      } catch {}
+
+      await this.listener.end().catch(() => undefined);
+      this.listener = null;
     }
   }
 }

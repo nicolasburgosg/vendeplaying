@@ -1,5 +1,10 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { Pool, type PoolClient, type QueryResultRow } from 'pg';
+import {
+  Client,
+  Pool,
+  type PoolClient,
+  type QueryResultRow,
+} from 'pg';
 
 const DEFAULT_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:58322/postgres';
@@ -56,6 +61,15 @@ export class DatabaseService implements OnModuleDestroy {
   private readonly pool = new Pool({
     ...buildPoolConfig(this.connectionString),
   });
+
+  async createListenerClient() {
+    const client = new Client({
+      ...buildPoolConfig(this.connectionString),
+    });
+
+    await client.connect();
+    return client;
+  }
 
   query<T extends QueryResultRow>(text: string, values: unknown[] = []) {
     return this.pool.query<T>(text, values);

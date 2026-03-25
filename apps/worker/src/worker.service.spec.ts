@@ -15,6 +15,7 @@ describe('WorkerService', () => {
 
     const service = new WorkerService(
       {
+        createListenerClient: jest.fn().mockRejectedValue(new Error("disabled in test")),
         query: jest.fn().mockResolvedValue({ rows: [] }),
       } as never,
       {
@@ -24,7 +25,7 @@ describe('WorkerService', () => {
 
     service.start();
     await Promise.resolve();
-    service.onModuleDestroy();
+    await service.onModuleDestroy();
 
     expect(setIntervalSpy).toHaveBeenCalled();
     expect(clearIntervalSpy).toHaveBeenCalled();
