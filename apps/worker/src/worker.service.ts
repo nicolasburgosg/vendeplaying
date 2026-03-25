@@ -1514,6 +1514,19 @@ export class WorkerService implements OnModuleDestroy {
   ) {
     await client.query(
       `
+        with updated as (
+          update internal.scheduled_jobs
+          set
+            payload = $12::jsonb,
+            available_at = coalesce($4::timestamptz, now()),
+            priority = $3,
+            updated_at = now()
+          where organization_id = $1
+            and dedupe_key = $6
+            and $6 is not null
+            and status in ('queued', 'locked')
+          returning id
+        )
         insert into internal.scheduled_jobs (
           organization_id,
           job_type,
@@ -1530,7 +1543,7 @@ export class WorkerService implements OnModuleDestroy {
           payment_attempt_id,
           payload
         )
-        values (
+        select
           $1,
           $2,
           'queued',
@@ -1545,14 +1558,8 @@ export class WorkerService implements OnModuleDestroy {
           $10,
           $11,
           $12::jsonb
-        )
-        on conflict (organization_id, dedupe_key)
-        where dedupe_key is not null and status in ('queued', 'locked')
-        do update set
-          payload = excluded.payload,
-          available_at = excluded.available_at,
-          priority = excluded.priority,
-          updated_at = now()
+        where not exists (select 1 from updated)
+        on conflict do nothing
       `,
       [
         input.organizationId,
