@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import type { FastifyRequest } from 'fastify';
+import type { PoolClient } from 'pg';
 import { DatabaseService } from './database.service';
 
 type ProviderStatusError = {
@@ -602,7 +603,10 @@ export class WebhooksController {
         return;
       }
 
-      const conversationResult = await client.query<{ id: string }>(
+      const conversationResult = await client.query<{
+        id: string;
+        ai_paused: boolean;
+      }>(
         `
           insert into public.conversations (
             organization_id,
@@ -621,12 +625,13 @@ export class WebhooksController {
             last_customer_message_at = excluded.last_customer_message_at,
             last_message_at = excluded.last_message_at,
             updated_at = now()
-          returning id
+          returning id, ai_paused
         `,
         [params.organizationId, params.channelId, customerId, occurredAt],
       );
 
-      const conversationId = conversationResult.rows[0]?.id;
+      const conversation = conversationResult.rows[0];
+      const conversationId = conversation?.id;
 
       if (!conversationId) {
         return;
@@ -739,6 +744,31 @@ export class WebhooksController {
           }),
         ],
       );
+
+      await this.insertScheduledJob(client, {
+        organizationId: params.organizationId,
+        jobType: 'generic',
+        dedupeKey: `${params.organizationId}:summary:${conversationId}`,
+        conversationId,
+        customerId,
+        payload: {
+          action: 'refresh_conversation_summary',
+        },
+      });
+
+      if (!conversation.ai_paused) {
+        await this.insertScheduledJob(client, {
+          organizationId: params.organizationId,
+          jobType: 'generic',
+          dedupeKey: `${params.organizationId}:auto-reply:${messageId}`,
+          conversationId,
+          customerId,
+          payload: {
+            action: 'auto_reply_inbound',
+            inboundMessageId: messageId,
+          },
+        });
+      }
     });
   }
 
@@ -959,5 +989,81 @@ export class WebhooksController {
             : null,
       payload: firstError,
     };
+  }
+
+  private async insertScheduledJob(
+    client: PoolClient,
+    input: {
+      organizationId: string;
+      jobType: 'generic';
+      payload?: Record<string, unknown>;
+      availableAt?: string | null;
+      priority?: number;
+      maxAttempts?: number;
+      dedupeKey?: string | null;
+      followUpRuleId?: string | null;
+      conversationId?: string | null;
+      orderId?: string | null;
+      customerId?: string | null;
+      paymentAttemptId?: string | null;
+    },
+  ) {
+    await client.query(
+      `
+        insert into internal.scheduled_jobs (
+          organization_id,
+          job_type,
+          status,
+          priority,
+          scheduled_at,
+          available_at,
+          max_attempts,
+          dedupe_key,
+          follow_up_rule_id,
+          conversation_id,
+          order_id,
+          customer_id,
+          payment_attempt_id,
+          payload
+        )
+        values (
+          $1,
+          $2,
+          'queued',
+          $3,
+          now(),
+          coalesce($4::timestamptz, now()),
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12::jsonb
+        )
+        on conflict (organization_id, dedupe_key)
+        where dedupe_key is not null and status in ('queued', 'locked')
+        do update set
+          payload = excluded.payload,
+          available_at = excluded.available_at,
+          priority = excluded.priority,
+          updated_at = now()
+      `,
+      [
+        input.organizationId,
+        input.jobType,
+        input.priority ?? 100,
+        input.availableAt ?? null,
+        input.maxAttempts ?? 5,
+        input.dedupeKey ?? null,
+        input.followUpRuleId ?? null,
+        input.conversationId ?? null,
+        input.orderId ?? null,
+        input.customerId ?? null,
+        input.paymentAttemptId ?? null,
+        JSON.stringify(input.payload ?? {}),
+      ],
+    );
   }
 }

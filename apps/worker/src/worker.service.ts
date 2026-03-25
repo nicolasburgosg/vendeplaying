@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
+import type { PoolClient } from 'pg';
 import { AiService } from './ai.service';
 import { DatabaseService } from './database.service';
 
@@ -470,13 +471,20 @@ export class WorkerService implements OnModuleDestroy {
   private async handleGenericJob(job: JobRow) {
     const action = this.stringPayload(job.payload.action);
 
-    if (action !== 'refresh_conversation_summary') {
-      return {
-        skipped: true,
-        reason: `Acción genérica no soportada: ${action ?? 'sin action'}.`,
-      };
+    switch (action) {
+      case 'refresh_conversation_summary':
+        return this.handleConversationSummary(job);
+      case 'auto_reply_inbound':
+        return this.handleAutoReplyInbound(job);
+      default:
+        return {
+          skipped: true,
+          reason: `Acción genérica no soportada: ${action ?? 'sin action'}.`,
+        };
     }
+  }
 
+  private async handleConversationSummary(job: JobRow) {
     if (!job.organization_id || !job.conversation_id) {
       throw new Error(
         'El job de resumen no tiene organization_id o conversation_id.',
@@ -542,6 +550,541 @@ export class WorkerService implements OnModuleDestroy {
     return {
       conversationId: job.conversation_id,
       summary,
+    };
+  }
+
+  private async handleAutoReplyInbound(job: JobRow) {
+    if (!job.organization_id || !job.conversation_id) {
+      throw new Error(
+        'El job de auto-reply no tiene organization_id o conversation_id.',
+      );
+    }
+
+    const organizationId = job.organization_id;
+    const conversationId = job.conversation_id;
+
+    const inboundMessageId =
+      this.stringPayload(job.payload.inboundMessageId) ??
+      this.stringPayload(job.payload.messageId);
+
+    if (!inboundMessageId) {
+      throw new Error(
+        'El job de auto-reply no tiene payload.inboundMessageId.',
+      );
+    }
+
+    const [conversationResult, inboundResult, latestInboundResult, channelResult] =
+      await Promise.all([
+        this.database.query<{
+          customer_id: string | null;
+          channel_id: string;
+          ai_paused: boolean;
+          status: string;
+        }>(
+          `
+            select customer_id, channel_id, ai_paused, status
+            from public.conversations
+            where organization_id = $1
+              and id = $2
+            limit 1
+          `,
+          [organizationId, conversationId],
+        ),
+        this.database.query<{
+          id: string;
+          customer_id: string | null;
+          body: string | null;
+          message_type: string;
+          message_created_at: string;
+        }>(
+          `
+            select
+              id,
+              customer_id,
+              body,
+              message_type,
+              coalesce(external_created_at, created_at) as message_created_at
+            from public.messages
+            where organization_id = $1
+              and conversation_id = $2
+              and id = $3
+              and direction = 'inbound'
+            limit 1
+          `,
+          [organizationId, conversationId, inboundMessageId],
+        ),
+        this.database.query<{ id: string }>(
+          `
+            select id
+            from public.messages
+            where organization_id = $1
+              and conversation_id = $2
+              and direction = 'inbound'
+            order by coalesce(external_created_at, created_at) desc, created_at desc
+            limit 1
+          `,
+          [organizationId, conversationId],
+        ),
+        this.database.query<{
+          status: string;
+          provider_business_account_id: string | null;
+          provider_phone_number_id: string | null;
+        }>(
+          `
+            select status, provider_business_account_id, provider_phone_number_id
+            from public.whatsapp_channels
+            where organization_id = $1
+            order by created_at asc
+            limit 1
+          `,
+          [organizationId],
+        ),
+      ]);
+
+    if (conversationResult.rows.length === 0) {
+      throw new CancelledJobError('La conversación ya no existe.');
+    }
+
+    const conversation = conversationResult.rows[0];
+
+    if (
+      conversation.ai_paused ||
+      ['waiting_human', 'closed', 'lost'].includes(conversation.status)
+    ) {
+      throw new CancelledJobError(
+        'La conversación pasó a un estado que cancela respuestas automáticas.',
+      );
+    }
+
+    if (!this.isKapsoReady(channelResult.rows[0])) {
+      throw new Error(
+        'La respuesta automática quedó lista, pero Kapso no está configurado para enviar.',
+      );
+    }
+
+    if (inboundResult.rows.length === 0) {
+      throw new CancelledJobError(
+        'No encontramos el mensaje inbound que disparó la respuesta.',
+      );
+    }
+
+    const inboundMessage = inboundResult.rows[0];
+
+    if (latestInboundResult.rows[0]?.id !== inboundMessage.id) {
+      throw new CancelledJobError(
+        'Entró un mensaje más reciente; esta respuesta quedó obsoleta.',
+      );
+    }
+
+    const outboundAfterInboundResult = await this.database.query<{ id: string }>(
+      `
+        select id
+        from public.messages
+        where organization_id = $1
+          and conversation_id = $2
+          and direction = 'outbound'
+          and coalesce(external_created_at, created_at) >= $3::timestamptz
+        order by created_at desc
+        limit 1
+      `,
+      [
+        organizationId,
+        conversationId,
+        inboundMessage.message_created_at,
+      ],
+    );
+
+    if (outboundAfterInboundResult.rows.length > 0) {
+      throw new CancelledJobError(
+        'La conversación ya recibió una salida posterior a este inbound.',
+      );
+    }
+
+    const customerId = inboundMessage.customer_id ?? conversation.customer_id;
+
+    if (!customerId) {
+      throw new CancelledJobError('La conversación no tiene customer_id.');
+    }
+
+    const [
+      customerResult,
+      sellerResult,
+      messagesResult,
+      productsResult,
+      knowledgeResult,
+    ] = await Promise.all([
+      this.database.query<{ full_name: string | null }>(
+        `
+          select full_name
+          from public.customers
+          where organization_id = $1
+            and id = $2
+          limit 1
+        `,
+        [organizationId, customerId],
+      ),
+      this.database.query<{
+        seller_name: string;
+        tone: string | null;
+        sales_style: string;
+        message_length: string;
+        welcome_message: string | null;
+        human_handoff_message: string | null;
+        company_description: string | null;
+        target_audience: string | null;
+        special_instructions: string | null;
+        forbidden_words: string[];
+        use_emojis: boolean;
+        is_active: boolean;
+      }>(
+        `
+          select
+            seller_name,
+            tone,
+            sales_style,
+            message_length,
+            welcome_message,
+            human_handoff_message,
+            company_description,
+            target_audience,
+            special_instructions,
+            forbidden_words,
+            use_emojis,
+            is_active
+          from public.ai_seller_profiles
+          where organization_id = $1
+          limit 1
+        `,
+        [organizationId],
+      ),
+      this.database.query<{
+        direction: string;
+        sender_type: string;
+        body: string | null;
+        created_at: string;
+        message_type: string | null;
+      }>(
+        `
+          select direction, sender_type, body, created_at, message_type
+          from public.messages
+          where organization_id = $1
+            and conversation_id = $2
+          order by created_at desc
+          limit 16
+        `,
+        [organizationId, conversationId],
+      ),
+      this.database.query<{
+        name: string;
+        description: string | null;
+        price: string;
+        currency_code: string;
+        stock_quantity: number;
+        status: string;
+      }>(
+        `
+          select
+            name,
+            description,
+            price,
+            currency_code,
+            stock_quantity,
+            status
+          from public.products
+          where organization_id = $1
+            and status = 'active'
+          order by updated_at desc
+          limit 30
+        `,
+        [organizationId],
+      ),
+      this.database.query<{
+        title: string | null;
+        question: string | null;
+        answer: string;
+        category: string;
+      }>(
+        `
+          select title, question, answer, category
+          from public.knowledge_items
+          where organization_id = $1
+            and is_active = true
+          order by priority asc, updated_at desc
+          limit 50
+        `,
+        [organizationId],
+      ),
+    ]);
+
+    if (sellerResult.rows.length === 0 || !sellerResult.rows[0].is_active) {
+      throw new CancelledJobError(
+        'No hay un perfil de IA activo para responder automáticamente.',
+      );
+    }
+
+    const seller = sellerResult.rows[0];
+    const replyPlan = await this.aiService.generateSellerReply({
+      seller: {
+        sellerName: seller.seller_name,
+        tone: seller.tone,
+        salesStyle: seller.sales_style,
+        messageLength: seller.message_length,
+        welcomeMessage: seller.welcome_message,
+        humanHandoffMessage: seller.human_handoff_message,
+        companyDescription: seller.company_description,
+        targetAudience: seller.target_audience,
+        specialInstructions: seller.special_instructions,
+        forbiddenWords: seller.forbidden_words ?? [],
+        useEmojis: seller.use_emojis,
+      },
+      customerName: customerResult.rows[0]?.full_name ?? null,
+      latestInboundMessage: {
+        body: inboundMessage.body,
+        messageType: inboundMessage.message_type,
+      },
+      messages: messagesResult.rows.reverse(),
+      products: productsResult.rows.map((product) => ({
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        currencyCode: product.currency_code,
+        stockQuantity: product.stock_quantity,
+        status: product.status,
+      })),
+      knowledgeItems: knowledgeResult.rows.map((item) => ({
+        title: item.title,
+        question: item.question,
+        answer: item.answer,
+        category: item.category,
+      })),
+    });
+
+    const reply = replyPlan.reply.trim();
+
+    if (!reply) {
+      throw new CancelledJobError('La IA no devolvió una respuesta utilizable.');
+    }
+
+    const now = new Date().toISOString();
+    const nextStatus = replyPlan.decision.shouldHandoff
+      ? 'waiting_human'
+      : 'waiting_customer';
+    const nextAiPaused = replyPlan.decision.shouldHandoff;
+
+    const result = await this.database.withTransaction(async (client) => {
+      const [freshConversationResult, freshLatestInboundResult] =
+        await Promise.all([
+          client.query<{
+            customer_id: string | null;
+            channel_id: string;
+            ai_paused: boolean;
+            status: string;
+          }>(
+            `
+              select customer_id, channel_id, ai_paused, status
+              from public.conversations
+              where organization_id = $1
+                and id = $2
+              limit 1
+            `,
+            [organizationId, conversationId],
+          ),
+          client.query<{ id: string }>(
+            `
+              select id
+              from public.messages
+              where organization_id = $1
+                and conversation_id = $2
+                and direction = 'inbound'
+              order by coalesce(external_created_at, created_at) desc, created_at desc
+              limit 1
+            `,
+            [organizationId, conversationId],
+          ),
+        ]);
+
+      if (freshConversationResult.rows.length === 0) {
+        throw new CancelledJobError('La conversación ya no existe.');
+      }
+
+      const freshConversation = freshConversationResult.rows[0];
+
+      if (
+        freshConversation.ai_paused ||
+        ['waiting_human', 'closed', 'lost'].includes(freshConversation.status)
+      ) {
+        throw new CancelledJobError(
+          'La conversación pasó a un estado que cancela respuestas automáticas.',
+        );
+      }
+
+      if (freshLatestInboundResult.rows[0]?.id !== inboundMessage.id) {
+        throw new CancelledJobError(
+          'Entró un mensaje más reciente; esta respuesta quedó obsoleta.',
+        );
+      }
+
+      const freshOutboundAfterInboundResult = await client.query<{ id: string }>(
+        `
+          select id
+          from public.messages
+          where organization_id = $1
+            and conversation_id = $2
+            and direction = 'outbound'
+            and coalesce(external_created_at, created_at) >= $3::timestamptz
+          order by created_at desc
+          limit 1
+        `,
+        [
+          organizationId,
+          conversationId,
+          inboundMessage.message_created_at,
+        ],
+      );
+
+      if (freshOutboundAfterInboundResult.rows.length > 0) {
+        throw new CancelledJobError(
+          'La conversación ya recibió una salida posterior a este inbound.',
+        );
+      }
+
+      const messageResult = await client.query<{ id: string }>(
+        `
+          insert into public.messages (
+            organization_id,
+            channel_id,
+            conversation_id,
+            customer_id,
+            direction,
+            sender_type,
+            body,
+            message_type,
+            current_status,
+            current_status_at,
+            payload
+          )
+          values (
+            $1,
+            $2,
+            $3,
+            $4,
+            'outbound',
+            'ai',
+            $5,
+            'text',
+            'queued',
+            $6::timestamptz,
+            $7::jsonb
+          )
+          returning id
+        `,
+        [
+          organizationId,
+          freshConversation.channel_id,
+          conversationId,
+          customerId,
+          reply,
+          now,
+          JSON.stringify({
+            source: 'auto_reply_inbound',
+            inbound_message_id: inboundMessage.id,
+            prompt_version: replyPlan.promptVersion,
+            seller_decision: replyPlan.decision,
+          }),
+        ],
+      );
+
+      const outboundMessageId = messageResult.rows[0]?.id;
+
+      if (!outboundMessageId) {
+        throw new Error('No pudimos crear el mensaje outbound automático.');
+      }
+
+      await client.query(
+        `
+          insert into public.message_status_events (
+            organization_id,
+            message_id,
+            conversation_id,
+            channel_id,
+            canonical_status,
+            occurred_at,
+            metadata
+          )
+          values (
+            $1,
+            $2,
+            $3,
+            $4,
+            'queued',
+            $5::timestamptz,
+            $6::jsonb
+          )
+        `,
+        [
+          organizationId,
+          outboundMessageId,
+          conversationId,
+          freshConversation.channel_id,
+          now,
+          JSON.stringify({
+            source: 'auto_reply_inbound',
+            inbound_message_id: inboundMessage.id,
+          }),
+        ],
+      );
+
+      await client.query(
+        `
+          update public.conversations
+          set
+            status = $3,
+            ai_paused = $4,
+            ai_paused_at = case when $4 then $5::timestamptz else null end,
+            human_handoff_requested_at = case when $4 then $5::timestamptz else null end,
+            last_agent_message_at = $5::timestamptz,
+            last_message_at = $5::timestamptz,
+            updated_at = now()
+          where organization_id = $1
+            and id = $2
+        `,
+        [organizationId, conversationId, nextStatus, nextAiPaused, now],
+      );
+
+      await this.insertScheduledJob(client, {
+        organizationId,
+        jobType: 'send_whatsapp_message',
+        conversationId,
+        customerId,
+        dedupeKey: `${organizationId}:send:${outboundMessageId}`,
+        payload: {
+          messageId: outboundMessageId,
+          body: reply,
+        },
+      });
+
+      await this.insertScheduledJob(client, {
+        organizationId,
+        jobType: 'generic',
+        conversationId,
+        customerId,
+        dedupeKey: `${organizationId}:summary:${conversationId}`,
+        payload: {
+          action: 'refresh_conversation_summary',
+        },
+      });
+
+      return {
+        outboundMessageId,
+      };
+    });
+
+    return {
+      conversationId,
+      inboundMessageId: inboundMessage.id,
+      outboundMessageId: result.outboundMessageId,
+      status: nextStatus,
+      handoff: replyPlan.decision.shouldHandoff,
     };
   }
 
@@ -932,6 +1475,82 @@ export class WorkerService implements OnModuleDestroy {
   private handlePaymentReconcile() {
     throw new Error(
       'La reconciliación de pagos queda preparada, pero el proveedor aún no tiene credenciales reales cargadas.',
+    );
+  }
+
+  private async insertScheduledJob(
+    client: PoolClient,
+    input: {
+      organizationId: string;
+      jobType: string;
+      payload?: Record<string, unknown>;
+      availableAt?: string | null;
+      priority?: number;
+      maxAttempts?: number;
+      dedupeKey?: string | null;
+      followUpRuleId?: string | null;
+      conversationId?: string | null;
+      orderId?: string | null;
+      customerId?: string | null;
+      paymentAttemptId?: string | null;
+    },
+  ) {
+    await client.query(
+      `
+        insert into internal.scheduled_jobs (
+          organization_id,
+          job_type,
+          status,
+          priority,
+          scheduled_at,
+          available_at,
+          max_attempts,
+          dedupe_key,
+          follow_up_rule_id,
+          conversation_id,
+          order_id,
+          customer_id,
+          payment_attempt_id,
+          payload
+        )
+        values (
+          $1,
+          $2,
+          'queued',
+          $3,
+          now(),
+          coalesce($4::timestamptz, now()),
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12::jsonb
+        )
+        on conflict (organization_id, dedupe_key)
+        where dedupe_key is not null and status in ('queued', 'locked')
+        do update set
+          payload = excluded.payload,
+          available_at = excluded.available_at,
+          priority = excluded.priority,
+          updated_at = now()
+      `,
+      [
+        input.organizationId,
+        input.jobType,
+        input.priority ?? 100,
+        input.availableAt ?? null,
+        input.maxAttempts ?? 5,
+        input.dedupeKey ?? null,
+        input.followUpRuleId ?? null,
+        input.conversationId ?? null,
+        input.orderId ?? null,
+        input.customerId ?? null,
+        input.paymentAttemptId ?? null,
+        JSON.stringify(input.payload ?? {}),
+      ],
     );
   }
 
