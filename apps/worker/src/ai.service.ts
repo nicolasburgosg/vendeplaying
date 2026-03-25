@@ -4,7 +4,21 @@ import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
 const SELLER_REPLY_PROMPT_VERSION = 'vendeto-auto-reply-fastlane-2026-03-25';
+const SELLER_GREETING_FAST_PATH_VERSION =
+  'vendeto-greeting-fast-path-2026-03-25';
 const SELLER_AI_MODEL = 'gpt-5-mini';
+const GREETING_FAST_PATH_MATCHES = new Set([
+  'hola',
+  'holi',
+  'hi',
+  'hello',
+  'hey',
+  'buenas',
+  'buenos dias',
+  'buenas tardes',
+  'buenas noches',
+]);
+const WAVING_HAND_ONLY_REGEX = /^[\p{White_Space}\p{P}\u{1F44B}\u{FE0F}]+$/u;
 
 const sellerDecisionSchema = z.object({
   intent: z.enum([
@@ -28,6 +42,8 @@ const sellerReplySchema = sellerDecisionSchema.extend({
   reply: z.string().min(1),
 });
 
+export type SellerDecision = z.infer<typeof sellerDecisionSchema>;
+
 type ConversationMessage = {
   direction: string;
   sender_type: string;
@@ -36,7 +52,7 @@ type ConversationMessage = {
   message_type?: string | null;
 };
 
-type SellerProfile = {
+export type SellerProfile = {
   sellerName: string;
   tone: string | null;
   salesStyle: string;
@@ -50,7 +66,7 @@ type SellerProfile = {
   useEmojis: boolean;
 };
 
-type ProductContext = {
+export type ProductContext = {
   name: string;
   description: string | null;
   price: string;
@@ -59,11 +75,18 @@ type ProductContext = {
   status: string;
 };
 
-type KnowledgeItemContext = {
+export type KnowledgeItemContext = {
   title: string | null;
   question: string | null;
   answer: string;
   category: string;
+};
+
+export type SellerReplyPlan = {
+  route: 'greeting_fast_path' | 'llm_full';
+  promptVersion: string;
+  decision: SellerDecision;
+  reply: string;
 };
 
 function normalizeSearchText(value: string) {
@@ -93,6 +116,19 @@ function scoreSearchMatch(haystack: string, tokens: string[]) {
 
     return score + (normalizedHaystack.startsWith(token) ? 4 : 2);
   }, 0);
+}
+
+function normalizeReplyText(value: string) {
+  return value.trim();
+}
+
+function containsForbiddenWord(candidate: string, forbiddenWords: string[]) {
+  const normalizedCandidate = normalizeSearchText(candidate);
+
+  return forbiddenWords.some((word) => {
+    const normalizedWord = normalizeSearchText(word.trim());
+    return normalizedWord.length > 0 && normalizedCandidate.includes(normalizedWord);
+  });
 }
 
 @Injectable()
@@ -140,6 +176,81 @@ export class AiService {
     return result.text.trim();
   }
 
+  shouldLoadCatalogContext(params: {
+    body: string | null;
+    messageType: string;
+  }) {
+    if (!['text', 'interactive'].includes(params.messageType)) {
+      return false;
+    }
+
+    const body = params.body?.trim();
+
+    if (!body) {
+      return false;
+    }
+
+    return tokenizeSearchText(body).length > 0;
+  }
+
+  tryBuildGreetingFastReply(params: {
+    seller: SellerProfile;
+    latestInboundMessage: {
+      body: string | null;
+      messageType: string;
+    };
+  }): SellerReplyPlan | null {
+    if (
+      !['text', 'interactive'].includes(params.latestInboundMessage.messageType)
+    ) {
+      return null;
+    }
+
+    const rawBody = params.latestInboundMessage.body?.trim();
+
+    if (!rawBody) {
+      return null;
+    }
+
+    const normalizedBody = normalizeSearchText(rawBody);
+    const isGreetingMatch = GREETING_FAST_PATH_MATCHES.has(normalizedBody);
+    const isWavingHandOnly = WAVING_HAND_ONLY_REGEX.test(rawBody);
+
+    if (!isGreetingMatch && !isWavingHandOnly) {
+      return null;
+    }
+
+    const welcomeMessage = params.seller.welcomeMessage?.trim();
+    const emoji = params.seller.useEmojis ? ' 👋' : '';
+    const sellerName = params.seller.sellerName.trim() || 'VendeTo';
+    const candidate = welcomeMessage
+      ? welcomeMessage
+      : params.seller.messageLength === 'short'
+        ? `¡Hola!${emoji} Soy ${sellerName}. ¿Qué buscas hoy?`
+        : `¡Hola!${emoji} Soy ${sellerName}. Te ayudo con productos, precios y pedidos. ¿Qué estás buscando hoy?`;
+    const reply = normalizeReplyText(candidate);
+
+    if (!reply || containsForbiddenWord(reply, params.seller.forbiddenWords)) {
+      return null;
+    }
+
+    return {
+      route: 'greeting_fast_path',
+      promptVersion: SELLER_GREETING_FAST_PATH_VERSION,
+      decision: {
+        intent: 'product_discovery',
+        confidence: 1,
+        shouldHandoff: false,
+        shouldOfferPayment: false,
+        productQuery: null,
+        knowledgeQuery: null,
+        nextStep: 'Identificar qué producto o necesidad tiene el cliente.',
+        caution: null,
+      },
+      reply,
+    };
+  }
+
   async generateSellerReply(params: {
     seller: SellerProfile;
     customerName: string | null;
@@ -150,7 +261,7 @@ export class AiService {
     messages: ConversationMessage[];
     products: ProductContext[];
     knowledgeItems: KnowledgeItemContext[];
-  }) {
+  }): Promise<SellerReplyPlan> {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('Falta OPENAI_API_KEY para generar respuestas automáticas.');
     }
@@ -289,6 +400,7 @@ export class AiService {
 
     if (decision.shouldHandoff && handoffReply) {
       return {
+        route: 'llm_full',
         promptVersion: SELLER_REPLY_PROMPT_VERSION,
         decision,
         reply: handoffReply,
@@ -296,9 +408,10 @@ export class AiService {
     }
 
     return {
+      route: 'llm_full',
       promptVersion: SELLER_REPLY_PROMPT_VERSION,
       decision,
-      reply: result.object.reply.trim(),
+      reply: normalizeReplyText(result.object.reply),
     };
   }
 }
