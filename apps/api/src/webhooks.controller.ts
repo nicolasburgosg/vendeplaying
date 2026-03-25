@@ -221,41 +221,61 @@ export class WebhooksController {
 
     const result = await this.database.query<{ id: string }>(
       `
-        insert into internal.provider_events (
-          provider_code,
-          event_type,
-          organization_id,
-          channel_id,
-          provider_event_id,
-          dedupe_key,
-          signature_valid,
-          processing_status,
-          source_system,
-          transport_type,
-          http_headers,
-          payload,
-          payload_hash
+        with updated as (
+          update internal.provider_events
+          set
+            payload = $7::jsonb,
+            http_headers = $6::jsonb
+          where provider_code = 'whatsapp_kapso'
+            and dedupe_key = $5
+            and $5 is not null
+          returning id
+        ),
+        inserted as (
+          insert into internal.provider_events (
+            provider_code,
+            event_type,
+            organization_id,
+            channel_id,
+            provider_event_id,
+            dedupe_key,
+            signature_valid,
+            processing_status,
+            source_system,
+            transport_type,
+            http_headers,
+            payload,
+            payload_hash
+          )
+          select
+            'whatsapp_kapso',
+            $1,
+            $2,
+            $3,
+            $4,
+            $5,
+            true,
+            'received',
+            'whatsapp',
+            'webhook',
+            $6::jsonb,
+            $7::jsonb,
+            md5($8)
+          where not exists (select 1 from updated)
+          on conflict do nothing
+          returning id
         )
-        values (
-          'whatsapp_kapso',
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          true,
-          'received',
-          'whatsapp',
-          'webhook',
-          $6::jsonb,
-          $7::jsonb,
-          md5($8)
-        )
-        on conflict (provider_code, dedupe_key)
-        do update set
-          payload = excluded.payload,
-          http_headers = excluded.http_headers
-        returning id
+        select coalesce(
+          (select id from updated limit 1),
+          (select id from inserted limit 1),
+          (
+            select id
+            from internal.provider_events
+            where provider_code = 'whatsapp_kapso'
+              and dedupe_key = $5
+            limit 1
+          )
+        ) as id
       `,
       [
         inferWhatsAppEventType(body),
@@ -353,6 +373,16 @@ export class WebhooksController {
 
     await this.database.query(
       `
+        with updated as (
+          update internal.provider_events
+          set
+            payload = $6::jsonb,
+            http_headers = $5::jsonb
+          where provider_code = $1
+            and dedupe_key = $4
+            and $4 is not null
+          returning id
+        )
         insert into internal.provider_events (
           provider_code,
           event_type,
@@ -365,7 +395,7 @@ export class WebhooksController {
           payload,
           payload_hash
         )
-        values (
+        select
           $1,
           $2,
           $3,
@@ -376,11 +406,8 @@ export class WebhooksController {
           $5::jsonb,
           $6::jsonb,
           md5($7)
-        )
-        on conflict (provider_code, dedupe_key)
-        do update set
-          payload = excluded.payload,
-          http_headers = excluded.http_headers
+        where not exists (select 1 from updated)
+        on conflict do nothing
       `,
       [
         providerCode,
