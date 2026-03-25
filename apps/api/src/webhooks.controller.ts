@@ -631,11 +631,12 @@ export class WebhooksController {
       );
 
       const conversation = conversationResult.rows[0];
-      const conversationId = conversation?.id;
 
-      if (!conversationId) {
+      if (!conversation) {
         return;
       }
+
+      const conversationId = conversation.id;
 
       const messageResult = await client.query<{ id: string }>(
         `

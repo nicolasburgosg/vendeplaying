@@ -859,7 +859,7 @@ export class WorkerService implements OnModuleDestroy {
       })),
     });
 
-    const reply = replyPlan.reply.trim();
+    const reply = replyPlan.reply.trim().slice(0, 4096);
 
     if (!reply) {
       throw new CancelledJobError('La IA no devolvió una respuesta utilizable.');
@@ -886,6 +886,7 @@ export class WorkerService implements OnModuleDestroy {
               where organization_id = $1
                 and id = $2
               limit 1
+              for update
             `,
             [organizationId, conversationId],
           ),
@@ -1050,6 +1051,22 @@ export class WorkerService implements OnModuleDestroy {
         `,
         [organizationId, conversationId, nextStatus, nextAiPaused, now],
       );
+
+      if (replyPlan.decision.shouldHandoff) {
+        await this.cancelConversationFollowUpsInTransaction(client, {
+          organizationId,
+          conversationId,
+          reason:
+            'La IA pidió takeover humano y se cancelaron los seguimientos automáticos.',
+        });
+      } else {
+        await this.scheduleFollowUpsForConversationInTransaction(client, {
+          organizationId,
+          conversationId,
+          customerId,
+          triggerType: 'awaiting_customer',
+        });
+      }
 
       await this.insertScheduledJob(client, {
         organizationId,
@@ -1552,6 +1569,81 @@ export class WorkerService implements OnModuleDestroy {
         JSON.stringify(input.payload ?? {}),
       ],
     );
+  }
+
+  private async cancelConversationFollowUpsInTransaction(
+    client: PoolClient,
+    params: {
+      organizationId: string;
+      conversationId: string;
+      reason: string;
+    },
+  ) {
+    await client.query(
+      `
+        update internal.scheduled_jobs
+        set
+          status = 'cancelled',
+          last_error = $3,
+          completed_at = now(),
+          updated_at = now()
+        where organization_id = $1
+          and conversation_id = $2
+          and job_type = 'run_follow_up'
+          and status in ('queued', 'locked')
+      `,
+      [params.organizationId, params.conversationId, params.reason],
+    );
+  }
+
+  private async scheduleFollowUpsForConversationInTransaction(
+    client: PoolClient,
+    params: {
+      organizationId: string;
+      conversationId: string;
+      customerId: string;
+      orderId?: string | null;
+      triggerType:
+        | 'abandoned_cart'
+        | 'payment_reminder'
+        | 'awaiting_customer'
+        | 'order_status_update'
+        | 'manual';
+    },
+  ) {
+    const rulesResult = await client.query<{
+      id: string;
+      delay_minutes: number;
+      target_type: string;
+    }>(
+      `
+        select id, delay_minutes, target_type
+        from public.follow_up_rules
+        where organization_id = $1
+          and is_active = true
+          and trigger_type = $2
+      `,
+      [params.organizationId, params.triggerType],
+    );
+
+    for (const rule of rulesResult.rows) {
+      await this.insertScheduledJob(client, {
+        organizationId: params.organizationId,
+        jobType: 'run_follow_up',
+        availableAt: new Date(
+          Date.now() + rule.delay_minutes * 60_000,
+        ).toISOString(),
+        dedupeKey: `${params.organizationId}:${rule.id}:${params.conversationId}:${params.orderId ?? 'none'}`,
+        followUpRuleId: rule.id,
+        conversationId: params.conversationId,
+        customerId: params.customerId,
+        orderId: params.orderId ?? null,
+        payload: {
+          triggerType: params.triggerType,
+          targetType: rule.target_type,
+        },
+      });
+    }
   }
 
   private async insertImportError(
