@@ -4,10 +4,11 @@ import {
   ensureKapsoMetaWebhook,
   ensureKapsoProjectWebhook,
 } from "@/lib/kapso";
+import { getSiteUrl } from "@/lib/supabase/config";
 import { runQuery } from "@/lib/server/postgres";
 
 function buildFailureUrl(request: NextRequest, reason: string) {
-  const failureUrl = new URL("/kapso/connect/failure", request.url);
+  const failureUrl = new URL("/kapso/connect/failure", getSiteUrl());
   failureUrl.searchParams.set("reason", reason);
   return failureUrl;
 }
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
       [organizationId, channelId, projectWebhookId, metaWebhookId, webhooksSkipped],
     );
 
-    const redirectUrl = new URL("/app/configuracion", request.url);
+    const redirectUrl = new URL("/app/configuracion", getSiteUrl());
     redirectUrl.searchParams.set("kapso", webhooksSkipped ? "connected-local" : "connected");
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
