@@ -88,10 +88,10 @@ export async function GET(request: NextRequest) {
         set
           metadata = coalesce(metadata, '{}'::jsonb)
             || jsonb_build_object(
-              'kapso_project_webhook_id', $3,
-              'kapso_meta_webhook_id', $4,
-              'kapso_webhooks_registered_at', case when $5 = false then now() else null end,
-              'kapso_webhooks_skipped', $5
+              'kapso_project_webhook_id', $3::text,
+              'kapso_meta_webhook_id', $4::text,
+              'kapso_webhooks_registered_at', case when $5::boolean = false then now() else null end,
+              'kapso_webhooks_skipped', $5::boolean
             ),
           updated_at = now()
         where organization_id = $1
