@@ -4,6 +4,7 @@ import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
 const SELLER_REPLY_PROMPT_VERSION = 'vendeto-auto-reply-fastlane-2026-03-25';
+const SELLER_AI_MODEL = 'gpt-5-mini';
 
 const sellerDecisionSchema = z.object({
   intent: z.enum([
@@ -124,7 +125,7 @@ export class AiService {
       .join('\n');
 
     const result = await generateText({
-      model: openai(process.env.VENDETO_AI_MODEL ?? 'gpt-4.1-mini'),
+      model: openai(SELLER_AI_MODEL),
       system: [
         `Resume conversaciones comerciales de ${params.sellerName}.`,
         'Responde siempre en español.',
@@ -225,7 +226,7 @@ export class AiService {
         : 'Sin notas comerciales relevantes.';
 
     const result = await generateObject({
-      model: openai(process.env.VENDETO_AI_MODEL ?? 'gpt-4.1-mini'),
+      model: openai(SELLER_AI_MODEL),
       schema: sellerReplySchema,
       system: [
         `Eres ${params.seller.sellerName}, la IA vendedora de VendeTo.`,

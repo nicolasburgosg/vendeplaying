@@ -60,7 +60,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: VENDETO_AI_MODEL
-        value: gpt-4.1-mini
+        value: gpt-5-mini
       - key: VENDETO_KAPSO_API_KEY
         sync: false
       - key: VENDETO_KAPSO_API_BASE_URL
@@ -100,7 +100,7 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: VENDETO_AI_MODEL
-        value: gpt-4.1-mini
+        value: gpt-5-mini
       - key: VENDETO_PUBLIC_API_URL
         sync: false
       - key: VENDETO_KAPSO_API_KEY

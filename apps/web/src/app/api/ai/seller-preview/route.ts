@@ -10,6 +10,7 @@ const sellerPreviewSchema = z.object({
 });
 
 const SELLER_PREVIEW_PROMPT_VERSION = "vendeto-seller-preview-2026-03-16";
+const SELLER_AI_MODEL = "gpt-5-mini";
 
 const sellerDecisionSchema = z.object({
   intent: z.enum([
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
     const seller = sellerResult.data;
     const products = productsResult.data ?? [];
     const knowledgeItems = knowledgeResult.data ?? [];
-    const model = openai(process.env.VENDETO_AI_MODEL ?? "gpt-4.1-mini");
+    const model = openai(SELLER_AI_MODEL);
 
     const decisionResult = await generateObject({
       model,
