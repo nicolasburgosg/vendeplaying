@@ -24,7 +24,7 @@ export function AppShell({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="site-shell grid gap-10 py-6 lg:grid-cols-[260px_1fr]">
+      <div className="grid w-full gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
         <aside className="border-b border-line pb-8 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 lg:pr-8">
           <BrandLockup subtitle="Operacion comercial" />
 
