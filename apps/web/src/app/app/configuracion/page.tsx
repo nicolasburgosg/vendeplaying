@@ -27,7 +27,9 @@ export default async function ConfiguracionPage() {
   const templateRows = templates ?? [];
   const importJobRows = importJobs ?? [];
   const channelMetadata =
-    context.channel?.metadata && typeof context.channel.metadata === "object" && !Array.isArray(context.channel.metadata)
+    context.channel?.metadata &&
+    typeof context.channel.metadata === "object" &&
+    !Array.isArray(context.channel.metadata)
       ? (context.channel.metadata as Record<string, unknown>)
       : null;
   const webhooksSkipped = channelMetadata?.kapso_webhooks_skipped === true;
@@ -50,16 +52,14 @@ export default async function ConfiguracionPage() {
   const kapsoConnectionAction = context.channel ? (
     <form action={startKapsoSetupLinkAction}>
       <input type="hidden" name="phoneE164" value={context.channel.phone_e164} />
-      <input
-        type="hidden"
-        name="displayName"
-        value={context.channel.display_name ?? ""}
-      />
+      <input type="hidden" name="displayName" value={context.channel.display_name ?? ""} />
       <button
         type="submit"
         className="inline-flex items-center rounded-full border border-line px-4 py-2 text-sm font-semibold text-foreground transition hover:border-foreground"
       >
-        {context.channel.status === "connected" ? "Reconectar con Kapso" : "Conectar con Kapso"}
+        {context.channel.status === "connected"
+          ? "Reconectar con Kapso"
+          : "Conectar con Kapso"}
       </button>
     </form>
   ) : null;
@@ -67,16 +67,15 @@ export default async function ConfiguracionPage() {
   return (
     <>
       <AppPageIntro
-        eyebrow="Configuracion"
+        eyebrow="Configuración"
         title="Estado del negocio e integraciones"
-        description="Lectura operativa de organización, canal, pagos, plantillas e importaciones desde el panel de VendeTo."
         aside={<StatusPill tone="accent">{context.organization.defaultLocale}</StatusPill>}
       />
 
-      <section className="site-section">
-        <div className="grid gap-10 xl:grid-cols-2">
-          <div>
-            <p className="site-kicker">Negocio</p>
+      <section className="app-section">
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className="app-card">
+            <p className="app-label mb-4">Negocio</p>
             <OrganizationSettingsForm
               organization={{
                 name: context.organization.name,
@@ -87,8 +86,8 @@ export default async function ConfiguracionPage() {
               }}
             />
           </div>
-          <div>
-            <p className="site-kicker">Canal de WhatsApp</p>
+          <div className="app-card">
+            <p className="app-label mb-4">Canal de WhatsApp</p>
             <WhatsAppChannelForm
               channel={context.channel}
               connectionStatus={kapsoConnectionStatus}
@@ -99,48 +98,55 @@ export default async function ConfiguracionPage() {
         </div>
       </section>
 
-      <section className="site-section">
-        <table className="site-table">
-          <tbody>
-            <tr>
-              <th>Negocio</th>
-              <td>{context.organization.name}</td>
-            </tr>
-            <tr>
-              <th>Slug</th>
-              <td>{context.organization.slug}</td>
-            </tr>
-            <tr>
-              <th>Canal</th>
-              <td>{context.channel?.phone_e164 ?? "Sin numero conectado"}</td>
-            </tr>
-            <tr>
-              <th>Nombre para mostrar</th>
-              <td>{context.channel?.display_name ?? "Pendiente de conexión"}</td>
-            </tr>
-            <tr>
-              <th>Estado</th>
-              <td>{context.channelStatusLabel}</td>
-            </tr>
-            <tr>
-              <th>Calidad del número</th>
-              <td>{labelQualityRating(context.channel?.quality_rating)}</td>
-            </tr>
-          </tbody>
-        </table>
+      <section className="app-section">
+        <div className="app-card">
+          <p className="app-label mb-4">Datos del negocio</p>
+          <table className="site-table">
+            <tbody>
+              <tr>
+                <th>Negocio</th>
+                <td>{context.organization.name}</td>
+              </tr>
+              <tr>
+                <th>Slug</th>
+                <td>{context.organization.slug}</td>
+              </tr>
+              <tr>
+                <th>Canal</th>
+                <td>{context.channel?.phone_e164 ?? "Sin número conectado"}</td>
+              </tr>
+              <tr>
+                <th>Nombre para mostrar</th>
+                <td>{context.channel?.display_name ?? "Pendiente en Meta"}</td>
+              </tr>
+              <tr>
+                <th>Estado</th>
+                <td>{context.channelStatusLabel}</td>
+              </tr>
+              <tr>
+                <th>Calidad del número</th>
+                <td>{labelQualityRating(context.channel?.quality_rating)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <section className="site-section">
-        <p className="site-kicker">Estado de configuración</p>
-        <ReadinessPanel readiness={readiness} />
+      <section className="app-section">
+        <div className="app-card">
+          <p className="app-label">Estado de configuración</p>
+          <div className="mt-4">
+            <ReadinessPanel readiness={readiness} />
+          </div>
+        </div>
       </section>
 
-      <section className="site-section">
-        <div className="grid gap-10 xl:grid-cols-2">
-          <div>
-            <p className="site-kicker">Configuraciones de pago</p>
+      <section className="app-section">
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className="app-card">
+            <p className="app-label mb-4">Configuraciones de pago</p>
             {paymentConfigRows.length > 0 ? (
-              <ul className="site-list mt-6 text-base leading-8 text-muted">
+              <ul className="site-list text-sm leading-7 text-muted">
                 {paymentConfigRows.map((config) => (
                   <li key={config.id}>
                     <span className="font-semibold text-foreground">
@@ -152,98 +158,104 @@ export default async function ConfiguracionPage() {
                 ))}
               </ul>
             ) : (
-              <p className="site-note mt-6">Sin configuraciones de pago activas.</p>
+              <p className="text-sm text-muted">Sin configuraciones de pago activas.</p>
             )}
           </div>
 
-          <div>
-            <p className="site-kicker">Últimas importaciones</p>
+          <div className="app-card">
+            <p className="app-label mb-4">Últimas importaciones</p>
             {importJobRows.length > 0 ? (
-              <ul className="site-list mt-6 text-base leading-8 text-muted">
+              <ul className="site-list text-sm leading-7 text-muted">
                 {importJobRows.map((job) => (
                   <li key={job.id}>
                     <span className="font-semibold text-foreground">
-                      {job.original_filename ?? "Importacion manual"}
+                      {job.original_filename ?? "Importación manual"}
                     </span>
                     {` · ${labelImportJobStatus(job.status)} · ${formatDateTime(job.updated_at)}`}
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="site-note mt-6">Sin jobs de importacion recientes.</p>
+              <p className="text-sm text-muted">Sin jobs de importación recientes.</p>
             )}
           </div>
         </div>
       </section>
 
-      <section className="site-section">
-        <p className="site-kicker">Plantillas aprobadas</p>
-        {templateRows.length > 0 ? (
-          <table className="site-table mt-6">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Estado</th>
-                <th>Idioma</th>
-              </tr>
-            </thead>
-            <tbody>
-              {templateRows.map((template) => (
-                <tr key={template.id}>
-                  <td className="font-semibold text-foreground">{template.name}</td>
-                  <td className="text-sm text-muted">
-                    {labelTemplateCategory(template.category_code)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {labelTemplateStatus(template.status_code)}
-                  </td>
-                  <td className="text-sm text-muted">{template.language_code}</td>
+      <section className="app-section">
+        <div className="app-card">
+          <p className="app-label mb-4">Plantillas aprobadas</p>
+          {templateRows.length > 0 ? (
+            <table className="site-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Estado</th>
+                  <th>Idioma</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="site-note mt-6">Aún no hay plantillas registradas.</p>
-        )}
+              </thead>
+              <tbody>
+                {templateRows.map((template) => (
+                  <tr key={template.id}>
+                    <td className="font-semibold text-foreground">{template.name}</td>
+                    <td className="text-sm text-muted">
+                      {labelTemplateCategory(template.category_code)}
+                    </td>
+                    <td className="text-sm text-muted">
+                      {labelTemplateStatus(template.status_code)}
+                    </td>
+                    <td className="text-sm text-muted">{template.language_code}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-sm text-muted">Aún no hay plantillas registradas.</p>
+          )}
+        </div>
       </section>
 
-      <section className="site-section">
-        <p className="site-kicker">Jobs internos recientes</p>
-        {operationJobs.length > 0 ? (
-          <table className="site-table mt-6">
-            <thead>
-              <tr>
-                <th>Tarea</th>
-                <th>Estado</th>
-                <th>Último intento</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {operationJobs.map((job) => (
-                <tr key={job.id}>
-                  <td className="font-semibold text-foreground">
-                    {labelJobType(job.job_type)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {labelJobStatus(job.status)}
-                    {job.latest_run_status ? ` · ${labelJobStatus(job.latest_run_status)}` : ""}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {formatDateTime(job.latest_run_finished_at ?? job.updated_at)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {job.last_error ?? job.latest_run_error ?? "Sin incidencias registradas."}
-                  </td>
+      {operationJobs.length > 0 && (
+        <section className="app-section">
+          <div className="app-card">
+            <p className="app-label mb-4">Jobs internos recientes</p>
+            <table className="site-table">
+              <thead>
+                <tr>
+                  <th>Tarea</th>
+                  <th>Estado</th>
+                  <th>Último intento</th>
+                  <th>Detalle</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="site-note mt-6">Todavía no hay jobs internos para mostrar.</p>
-        )}
-      </section>
+              </thead>
+              <tbody>
+                {operationJobs.map((job) => (
+                  <tr key={job.id}>
+                    <td className="font-semibold text-foreground">
+                      {labelJobType(job.job_type)}
+                    </td>
+                    <td className="text-sm text-muted">
+                      {labelJobStatus(job.status)}
+                      {job.latest_run_status
+                        ? ` · ${labelJobStatus(job.latest_run_status)}`
+                        : ""}
+                    </td>
+                    <td className="text-sm text-muted">
+                      {formatDateTime(job.latest_run_finished_at ?? job.updated_at)}
+                    </td>
+                    <td className="text-sm text-muted">
+                      {job.last_error ??
+                        job.latest_run_error ??
+                        "Sin incidencias registradas."}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </>
   );
 }

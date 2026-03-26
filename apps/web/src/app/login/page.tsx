@@ -26,10 +26,10 @@ export default async function LoginPage() {
               <IllustrationSlot width={120} height={120} label="Bienvenido" />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  Entra a tu operacion
+                  Entra a tu operación
                 </h1>
                 <p className="mt-2 text-sm text-muted">
-                  Usa el correo y contrasena de tu negocio para acceder al
+                  Usa el correo y contraseña de tu negocio para acceder al
                   panel.
                 </p>
               </div>

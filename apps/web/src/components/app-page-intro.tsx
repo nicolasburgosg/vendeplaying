@@ -8,7 +8,7 @@ export function AppPageIntro({
 }: {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   aside?: ReactNode;
 }) {
   return (
@@ -19,7 +19,9 @@ export function AppPageIntro({
           <h1 className="mt-4 text-4xl font-semibold tracking-tight">{title}</h1>
         </div>
         <div className="space-y-4">
-          <p className="site-lead max-w-none">{description}</p>
+          {description ? (
+            <p className="site-lead max-w-none">{description}</p>
+          ) : null}
           {aside}
         </div>
       </div>

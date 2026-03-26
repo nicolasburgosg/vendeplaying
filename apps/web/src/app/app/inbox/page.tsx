@@ -1,37 +1,52 @@
 import Link from "next/link";
-import { updateConversationAction } from "@/app/app/actions";
-import { AppPageIntro } from "@/components/app-page-intro";
-import {
-  AttachOrderForm,
-  ConversationReplyForm,
-  CreateConversationOrderForm,
-} from "@/components/inbox-forms";
-import { ReadinessPanel } from "@/components/readiness-panel";
+import { Search } from "lucide-react";
+import { ConversationReplyForm } from "@/components/inbox-forms";
+import { InboxDetails } from "@/components/inbox-details";
 import { StatusPill } from "@/components/status-pill";
-import {
-  CONVERSATION_STATUS_OPTIONS,
-  LEAD_TEMPERATURE_OPTIONS,
-} from "@/lib/domain-options";
 import { formatDateTime } from "@/lib/format";
 import {
   labelConversationStatus,
-  labelLeadTemperature,
   labelMessageStatus,
-  labelOrderPaymentStatus,
-  labelOrderStatus,
 } from "@/lib/labels";
 import { getInboxPageData } from "@/lib/merchant";
 
 function conversationMode(aiPaused: boolean, handoffAt: string | null) {
-  if (aiPaused) {
-    return "Humano activo";
-  }
-
-  if (handoffAt) {
-    return "Pidiendo humano";
-  }
-
+  if (aiPaused) return "Humano activo";
+  if (handoffAt) return "Pidiendo humano";
   return "IA activa";
+}
+
+function timeAgo(dateStr: string | null) {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "ahora";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return formatDateTime(dateStr);
+}
+
+function getInitials(name: string | null | undefined) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getLastMessagePreview(
+  messages: { body: string | null; message_type: string; direction: string }[],
+) {
+  if (messages.length === 0) return "Sin mensajes";
+  const last = messages[0];
+  const prefix = last.direction === "inbound" ? "" : "Tú: ";
+  const text = last.body ?? last.message_type;
+  return `${prefix}${text}`;
 }
 
 export default async function InboxPage({
@@ -40,15 +55,14 @@ export default async function InboxPage({
   searchParams?: Promise<{ conversation?: string }>;
 }) {
   const {
-    context,
     conversations,
     messagesByConversation,
     statusEventsByMessage,
     linkedOrdersByConversation,
     ordersByCustomer,
     readiness,
-  } =
-    await getInboxPageData();
+  } = await getInboxPageData();
+
   const params = searchParams ? await searchParams : undefined;
   const selectedConversation =
     conversations.find((conversation) => conversation.id === params?.conversation) ??
@@ -68,235 +82,198 @@ export default async function InboxPage({
   );
 
   return (
-    <>
-      <AppPageIntro
-        eyebrow="Inbox"
-        title="Conversaciones y takeover"
-        description="Vista de inbox con estado comercial, takeover humano y trafico reciente sobre el canal principal."
-        aside={<StatusPill tone="accent">{context.channel?.phone_e164 ?? "Sin numero"}</StatusPill>}
-      />
-
-      <section className="space-y-6">
-        <div className="flex flex-col gap-4 border-t border-line pt-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="site-kicker">Dependencias de envío</p>
-            <p className="text-sm leading-7 text-muted">
-              Estado del canal principal y módulos necesarios para responder
-              desde el inbox.
-            </p>
-          </div>
-          <ReadinessPanel readiness={readiness} compact />
+    <div className="-mx-8 -mt-8 flex h-[calc(100vh-0px)] lg:-mx-10 lg:-mt-10">
+      <div className="flex w-[340px] shrink-0 flex-col border-r border-line bg-surface">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h1 className="text-lg font-semibold">Inbox</h1>
+          <span className="tabular-nums text-sm text-muted">
+            {conversations.length}
+          </span>
         </div>
 
-        {conversations.length > 0 ? (
-          <table className="site-table">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Estado</th>
-                <th>Modo</th>
-                <th>Lead</th>
-                <th>Ultimo mensaje</th>
-                <th>Detalle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {conversations.map((conversation) => (
-                <tr key={conversation.id}>
-                  <td>
-                    <Link
-                      href={`/app/inbox?conversation=${conversation.id}`}
-                      className="font-semibold text-foreground underline-offset-4 hover:underline"
-                    >
-                      {conversation.customer?.full_name ?? "Contacto sin nombre"}
-                    </Link>
-                    <p className="text-sm text-muted">
-                      {conversation.customer?.whatsapp_e164 ?? "Sin telefono"}
-                    </p>
-                  </td>
-                  <td className="text-sm text-muted">
-                    {labelConversationStatus(conversation.status)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {conversationMode(
-                      conversation.ai_paused,
-                      conversation.human_handoff_requested_at,
-                    )}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {labelLeadTemperature(conversation.lead_temperature)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    {formatDateTime(conversation.last_message_at)}
-                  </td>
-                  <td className="text-sm text-muted">
-                    <Link
-                      href={`/app/inbox?conversation=${conversation.id}`}
-                      className="font-semibold text-accent-strong"
-                    >
-                      Abrir
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="site-note">Aún no hay conversaciones para este negocio.</p>
-        )}
-      </section>
+        <div className="border-b border-line px-4 py-3">
+          <div className="flex items-center gap-2 rounded-lg bg-background px-3 py-2">
+            <Search aria-hidden="true" size={15} className="shrink-0 text-muted" />
+            <span className="text-sm text-muted">Buscar conversaciones&hellip;</span>
+          </div>
+        </div>
 
-      <section className="border-t border-line pt-8">
+        <div className="flex-1 overflow-y-auto">
+          {conversations.length > 0 ? (
+            <ul>
+              {conversations.map((conversation) => {
+                const isSelected = selectedConversation?.id === conversation.id;
+                const msgs = messagesByConversation[conversation.id] ?? [];
+                const preview = getLastMessagePreview(msgs);
+                const initials = getInitials(conversation.customer?.full_name);
+
+                return (
+                  <li key={conversation.id}>
+                    <Link
+                      href={`/app/inbox?conversation=${conversation.id}`}
+                      className={`flex items-start gap-3 border-b border-line px-5 py-3.5 transition-colors ${
+                        isSelected ? "bg-accent-soft" : "hover:bg-background"
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background text-xs font-semibold text-muted"
+                      >
+                        {initials}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="truncate text-sm font-semibold">
+                            {conversation.customer?.full_name ?? "Sin nombre"}
+                          </p>
+                          <span className="shrink-0 text-xs tabular-nums text-muted">
+                            {timeAgo(conversation.last_message_at)}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-muted">
+                          {preview}
+                        </p>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <StatusPill
+                            tone={conversation.ai_paused ? "warning" : "success"}
+                          >
+                            {conversation.ai_paused ? "Humano" : "IA"}
+                          </StatusPill>
+                          <span className="text-xs text-muted">
+                            {labelConversationStatus(conversation.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <p className="text-sm font-semibold">Sin conversaciones</p>
+              <p className="mt-1 text-xs text-muted">
+                Las conversaciones con clientes aparecerán aquí.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col bg-background">
         {selectedConversation ? (
-          <div className="grid gap-8 xl:grid-cols-[0.7fr_1.3fr]">
-            <div>
-              <p className="site-kicker">Control operativo</p>
-              <form action={updateConversationAction} className="mt-6 space-y-6 border-t border-line pt-6">
-                <input
-                  type="hidden"
-                  name="conversationId"
-                  value={selectedConversation.id}
-                />
-                <div className="grid gap-4">
-                  <label className="grid gap-2 text-sm font-medium">
-                    Estado
-                    <select
-                      name="status"
-                      className="site-input"
-                      defaultValue={selectedConversation.status}
-                    >
-                      {CONVERSATION_STATUS_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {labelConversationStatus(option)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm font-medium">
-                    Temperatura del lead
-                    <select
-                      name="leadTemperature"
-                      className="site-input"
-                      defaultValue={selectedConversation.lead_temperature}
-                    >
-                      {LEAD_TEMPERATURE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {labelLeadTemperature(option)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="inline-flex items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      name="aiPaused"
-                      defaultChecked={selectedConversation.ai_paused}
-                    />
-                    Pausar IA y dejar takeover humano
-                  </label>
-                </div>
-
-                <button type="submit" className="site-button">
-                  Guardar conversación
-                </button>
-              </form>
-
-              <div className="mt-8 space-y-8">
+          <>
+            <div className="flex items-center justify-between border-b border-line bg-surface px-6 py-4">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-xs font-semibold text-muted"
+                >
+                  {getInitials(selectedConversation.customer?.full_name)}
+                </span>
                 <div>
-                  <p className="site-kicker">Cobro y pedido</p>
-                  <CreateConversationOrderForm conversationId={selectedConversation.id} />
-                </div>
-
-                <div>
-                  <p className="site-kicker">Vincular pedido existente</p>
-                  {availableOrders.length > 0 ? (
-                    <AttachOrderForm
-                      conversationId={selectedConversation.id}
-                      orders={availableOrders.map((order) => ({
-                        id: order.id,
-                        label: `#${order.order_number} · ${labelOrderStatus(order.status)} · ${labelOrderPaymentStatus(order.payment_status)}`,
-                      }))}
-                    />
-                  ) : (
-                    <p className="site-note mt-4">
-                      No hay pedidos adicionales de este cliente para vincular.
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <p className="site-kicker">Respuesta manual</p>
-                  <ConversationReplyForm
-                    conversationId={selectedConversation.id}
-                    canSend={readiness.whatsapp.state === "ready"}
-                    blockers={readiness.whatsapp.blockers}
-                  />
+                  <p className="text-sm font-semibold">
+                    {selectedConversation.customer?.full_name ?? "Sin nombre"}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {selectedConversation.customer?.whatsapp_e164 ?? "Sin teléfono"}
+                  </p>
                 </div>
               </div>
+              <StatusPill
+                tone={selectedConversation.ai_paused ? "warning" : "success"}
+              >
+                {conversationMode(
+                  selectedConversation.ai_paused,
+                  selectedConversation.human_handoff_requested_at,
+                )}
+              </StatusPill>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between gap-4 border-b border-line pb-3">
-                <div>
-                  <p className="font-semibold">
-                    {selectedConversation.customer?.full_name ?? "Contacto sin nombre"}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {selectedConversation.customer?.whatsapp_e164 ?? "Sin telefono"}
-                  </p>
-                </div>
-                <StatusPill tone={selectedConversation.ai_paused ? "warning" : "success"}>
-                  {selectedConversation.ai_paused ? "Humano" : "IA"}
-                </StatusPill>
-              </div>
-
-              {linkedOrders.length > 0 ? (
-                <div className="border-b border-line py-4">
-                  <p className="site-kicker">Pedidos vinculados</p>
-                  <ul className="site-list mt-3 text-sm leading-7 text-muted">
-                    {linkedOrders.map((order) => (
-                      <li key={order.id}>
-                        <span className="font-semibold text-foreground">
-                          #{order.order_number}
-                        </span>
-                        {` · ${labelOrderStatus(order.status)} · ${labelOrderPaymentStatus(order.payment_status)}`}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
+            <div className="flex-1 overflow-y-auto px-6 py-6">
               {selectedMessages.length > 0 ? (
-                <ul className="site-list mt-3 text-sm leading-7 text-muted">
-                  {selectedMessages.slice().reverse().map((message) => (
-                    <li key={message.id}>
-                      <span className="font-semibold text-foreground">
-                        {message.direction === "inbound" ? "Cliente" : "VendeTo"}
-                      </span>
-                      {`: ${message.body ?? message.message_type}`}
-                      <p className="mt-1 text-xs uppercase tracking-[0.22em] text-muted">
-                        {labelMessageStatus(message.current_status)}
-                      </p>
-                      {(statusEventsByMessage[message.id] ?? []).length > 0 ? (
-                        <p className="mt-1 text-xs text-muted">
-                          {(statusEventsByMessage[message.id] ?? [])
-                            .slice(0, 2)
-                            .map((event) => `${labelMessageStatus(event.canonical_status)} · ${formatDateTime(event.occurred_at)}`)
-                            .join(" | ")}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mx-auto max-w-2xl space-y-3">
+                  {selectedMessages
+                    .slice()
+                    .reverse()
+                    .map((message) => {
+                      const isOutbound = message.direction === "outbound";
+                      const events = statusEventsByMessage[message.id] ?? [];
+
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex ${
+                            isOutbound ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                              isOutbound
+                                ? "rounded-br-md bg-accent text-white"
+                                : "rounded-bl-md bg-surface text-foreground"
+                            }`}
+                            style={
+                              !isOutbound
+                                ? { border: "1px solid var(--line)" }
+                                : undefined
+                            }
+                          >
+                            <p className="text-sm leading-relaxed">
+                              {message.body ?? message.message_type}
+                            </p>
+                            <div
+                              className={`mt-1 flex items-center gap-1.5 text-[0.65rem] ${
+                                isOutbound ? "text-white/70" : "text-muted"
+                              }`}
+                            >
+                              <span>{labelMessageStatus(message.current_status)}</span>
+                              {events.length > 0 && (
+                                <span>
+                                  &middot; {formatDateTime(events[0].occurred_at)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               ) : (
-                <p className="site-note mt-4">Aún no hay mensajes guardados en esta conversación.</p>
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                  <p className="text-sm font-semibold">Sin mensajes</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Los mensajes de esta conversación aparecerán aquí.
+                  </p>
+                </div>
               )}
             </div>
-          </div>
+
+            <div className="border-t border-line bg-surface px-6 py-4">
+              <ConversationReplyForm
+                conversationId={selectedConversation.id}
+                canSend={readiness.whatsapp.state === "ready"}
+                blockers={readiness.whatsapp.blockers}
+              />
+            </div>
+          </>
         ) : (
-          <p className="site-note">Selecciona una conversación para verla en detalle.</p>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <p className="text-lg font-semibold">Selecciona una conversación</p>
+            <p className="mt-1 text-sm text-muted">
+              Elige una conversación de la lista para ver los mensajes.
+            </p>
+          </div>
         )}
-      </section>
-    </>
+      </div>
+
+      {selectedConversation && (
+        <InboxDetails
+          conversation={selectedConversation}
+          linkedOrders={linkedOrders}
+          availableOrders={availableOrders}
+        />
+      )}
+    </div>
   );
 }

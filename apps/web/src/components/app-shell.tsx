@@ -1,17 +1,18 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { signOutAction } from "@/app/app/actions";
 import { AppSidebarNav } from "@/components/app-sidebar-nav";
 import { BrandLockup } from "@/components/brand-lockup";
 import { StatusPill } from "@/components/status-pill";
-import { labelMembershipRole } from "@/lib/labels";
 
 export function AppShell({
   organizationName,
   organizationSlug,
   userName,
   userEmail,
-  membershipRole,
   channelStatusLabel,
+  inboxCount,
+  pedidosCount,
   children,
 }: {
   organizationName: string;
@@ -20,43 +21,74 @@ export function AppShell({
   userEmail: string;
   membershipRole: string;
   channelStatusLabel: string;
+  inboxCount?: number;
+  pedidosCount?: number;
   children: ReactNode;
 }) {
+  const initials = userName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="grid w-full gap-10 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
-        <aside className="border-b border-line pb-8 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 lg:pr-8">
-          <BrandLockup subtitle="Operacion comercial" />
+    <div className="min-h-screen bg-background text-foreground lg:grid lg:grid-cols-[240px_1fr]">
+      <aside
+        aria-label="Navegación principal"
+        className="flex flex-col border-b border-line bg-surface px-5 py-6 lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0 lg:border-line"
+      >
+        <BrandLockup subtitle="Operación comercial" />
 
-          <div className="mt-8 space-y-3 border-t border-line pt-6">
-            <p className="text-sm font-semibold">{organizationName}</p>
-            <p className="text-sm text-muted">{organizationSlug}</p>
-            <StatusPill tone="accent">{channelStatusLabel}</StatusPill>
-          </div>
+        <div className="mt-6 space-y-2">
+          <p className="text-sm font-semibold">{organizationName}</p>
+          <p className="text-xs text-muted">{organizationSlug}</p>
+          <StatusPill tone="accent">{channelStatusLabel}</StatusPill>
+        </div>
 
-          <AppSidebarNav />
+        <AppSidebarNav inboxCount={inboxCount} pedidosCount={pedidosCount} />
 
-          <div className="mt-8 space-y-3 border-t border-line pt-6 text-sm">
-            <div>
-              <p className="font-semibold">{userName}</p>
-              <p className="mt-1 text-muted">{userEmail}</p>
+        <div className="mt-auto space-y-1 border-t border-line pt-5 text-sm">
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-xs font-semibold text-muted"
+            >
+              {initials}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-semibold leading-tight">{userName}</p>
+              <p className="truncate text-xs text-muted">{userEmail}</p>
             </div>
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-accent-strong">
-              {labelMembershipRole(membershipRole)}
-            </p>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="site-button-secondary w-full justify-center"
-              >
-                Cerrar sesion
-              </button>
-            </form>
           </div>
-        </aside>
+          <form action={signOutAction} className="pt-1">
+            <button
+              type="submit"
+              className="text-xs text-muted transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
 
-        <main className="min-w-0 space-y-10 pb-12">{children}</main>
-      </div>
+        <div className="mt-4 space-y-2 border-t border-line pt-4">
+          <p className="text-xs text-muted">Recursos</p>
+          <a
+            href="mailto:soporte@vendeto.com"
+            className="block text-xs text-muted transition-colors hover:text-foreground"
+          >
+            Contactar soporte
+          </a>
+          <Link
+            href="/contacto"
+            className="block text-xs text-muted transition-colors hover:text-foreground"
+          >
+            Centro de ayuda
+          </Link>
+        </div>
+      </aside>
+
+      <main className="min-w-0 px-8 py-8 lg:px-10 lg:py-10">{children}</main>
     </div>
   );
 }
