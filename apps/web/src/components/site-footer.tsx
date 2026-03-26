@@ -11,13 +11,6 @@ export function SiteFooter() {
             <BrandLockup className="[&_p]:text-white" />
             <p className="max-w-sm text-sm leading-relaxed text-white/50">
               Tu agente de ventas por WhatsApp con IA.
-              <br />
-              Operado por VendeTo LLC.
-            </p>
-            <p className="max-w-sm text-xs leading-relaxed text-white/40">
-              Entidad legal: VendeTo LLC
-              <br />
-              301 West Ave, Unit 1307, Austin, TX 78701
             </p>
           </div>
 
