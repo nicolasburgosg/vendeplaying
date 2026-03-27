@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  canRegisterKapsoWebhooks,
+  canRegisterKapsoMetaWebhook,
+  canRegisterKapsoProjectWebhook,
   ensureKapsoMetaWebhook,
   ensureKapsoProjectWebhook,
 } from "@/lib/kapso";
@@ -70,18 +71,33 @@ export async function GET(request: NextRequest) {
 
     let projectWebhookId: string | null = null;
     let metaWebhookId: string | null = null;
-    let webhooksSkipped = true;
+    const projectWebhookSkipped = !canRegisterKapsoProjectWebhook();
+    const metaWebhookSkipped = !canRegisterKapsoMetaWebhook();
+    const webhooksSkipped = projectWebhookSkipped && metaWebhookSkipped;
+    let projectWebhookError: string | null = null;
+    let metaWebhookError: string | null = null;
 
-    if (canRegisterKapsoWebhooks()) {
-      const [projectWebhook, metaWebhook] = await Promise.all([
-        ensureKapsoProjectWebhook(),
-        ensureKapsoMetaWebhook(phoneNumberId),
-      ]);
-
-      projectWebhookId = projectWebhook?.id ?? null;
-      metaWebhookId = metaWebhook?.id ?? null;
-      webhooksSkipped = false;
+    if (!projectWebhookSkipped) {
+      try {
+        const projectWebhook = await ensureKapsoProjectWebhook();
+        projectWebhookId = projectWebhook?.id ?? null;
+      } catch (error) {
+        projectWebhookError =
+          error instanceof Error ? error.message : "No pudimos registrar el webhook del proyecto.";
+      }
     }
+
+    if (!metaWebhookSkipped) {
+      try {
+        const metaWebhook = await ensureKapsoMetaWebhook(phoneNumberId);
+        metaWebhookId = metaWebhook?.id ?? null;
+      } catch (error) {
+        metaWebhookError =
+          error instanceof Error ? error.message : "No pudimos registrar el webhook del numero.";
+      }
+    }
+
+    const webhookRegistered = Boolean(projectWebhookId || metaWebhookId);
 
     await runQuery(
       `
@@ -91,14 +107,29 @@ export async function GET(request: NextRequest) {
             || jsonb_build_object(
               'kapso_project_webhook_id', $3::text,
               'kapso_meta_webhook_id', $4::text,
-              'kapso_webhooks_registered_at', case when $5::boolean = false then now() else null end,
-              'kapso_webhooks_skipped', $5::boolean
+              'kapso_webhooks_registered_at', case when $10::boolean = true then now() else null end,
+              'kapso_webhooks_skipped', $5::boolean,
+              'kapso_project_webhook_skipped', $6::boolean,
+              'kapso_meta_webhook_skipped', $7::boolean,
+              'kapso_project_webhook_error', $8::text,
+              'kapso_meta_webhook_error', $9::text
             ),
           updated_at = now()
         where organization_id = $1
           and id = $2
       `,
-      [organizationId, channelId, projectWebhookId, metaWebhookId, webhooksSkipped],
+      [
+        organizationId,
+        channelId,
+        projectWebhookId,
+        metaWebhookId,
+        webhooksSkipped,
+        projectWebhookSkipped,
+        metaWebhookSkipped,
+        projectWebhookError,
+        metaWebhookError,
+        webhookRegistered,
+      ],
     );
 
     const redirectUrl = new URL("/app/configuracion", getSiteUrl());

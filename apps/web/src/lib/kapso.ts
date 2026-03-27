@@ -72,7 +72,7 @@ export function getKapsoPublicApiUrl() {
   );
 }
 
-export function canRegisterKapsoWebhooks() {
+function hasRemoteKapsoWebhookUrl() {
   try {
     const url = new URL(getKapsoPublicApiUrl());
 
@@ -84,6 +84,18 @@ export function canRegisterKapsoWebhooks() {
   } catch {
     return false;
   }
+}
+
+export function canRegisterKapsoProjectWebhook() {
+  return hasRemoteKapsoWebhookUrl() && Boolean(process.env.VENDETO_KAPSO_PROJECT_WEBHOOK_SECRET?.trim());
+}
+
+export function canRegisterKapsoMetaWebhook() {
+  return hasRemoteKapsoWebhookUrl() && Boolean(process.env.VENDETO_KAPSO_META_WEBHOOK_TOKEN?.trim());
+}
+
+export function canRegisterKapsoWebhooks() {
+  return canRegisterKapsoProjectWebhook() || canRegisterKapsoMetaWebhook();
 }
 
 export function getKapsoProjectWebhookUrl() {
@@ -213,7 +225,7 @@ export async function listKapsoProjectWebhooks() {
 }
 
 export async function ensureKapsoProjectWebhook() {
-  if (!canRegisterKapsoWebhooks()) {
+  if (!canRegisterKapsoProjectWebhook()) {
     return null;
   }
 
@@ -252,7 +264,7 @@ export async function ensureKapsoProjectWebhook() {
 }
 
 export async function ensureKapsoMetaWebhook(phoneNumberId: string) {
-  if (!canRegisterKapsoWebhooks()) {
+  if (!canRegisterKapsoMetaWebhook()) {
     return null;
   }
 
