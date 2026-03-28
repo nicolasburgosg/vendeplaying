@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { loginAction } from "@/app/login/actions";
+import { requestPasswordResetAction } from "@/app/login/actions";
 import { AuthSubmitButton } from "@/components/auth-submit-button";
 import { INITIAL_AUTH_FORM_STATE } from "@/lib/auth/forms";
 
-export function LoginForm() {
-  const [state, formAction] = useActionState(loginAction, INITIAL_AUTH_FORM_STATE);
+export function PasswordRecoveryForm() {
+  const [state, formAction] = useActionState(
+    requestPasswordResetAction,
+    INITIAL_AUTH_FORM_STATE,
+  );
   const fields = state?.fields ?? {};
   const message = state?.message;
   const status = state?.status ?? "idle";
@@ -16,7 +19,7 @@ export function LoginForm() {
     <form action={formAction} className="mt-8">
       <div className="site-form-grid">
         <label className="grid gap-2 text-sm font-medium">
-          Correo
+          Correo de la cuenta
           <input
             type="email"
             name="email"
@@ -27,27 +30,6 @@ export function LoginForm() {
             required
           />
         </label>
-        <label className="grid gap-2 text-sm font-medium">
-          Contraseña
-          <input
-            type="password"
-            name="password"
-            className="site-input"
-            placeholder="••••••••"
-            autoComplete="current-password"
-            minLength={8}
-            required
-          />
-        </label>
-      </div>
-
-      <div className="mt-3 flex justify-end">
-        <Link
-          href="/recuperar-contrasena"
-          className="text-sm font-semibold text-accent-strong"
-        >
-          ¿Olvidaste tu contraseña?
-        </Link>
       </div>
 
       {message ? (
@@ -63,16 +45,16 @@ export function LoginForm() {
       ) : null}
 
       <AuthSubmitButton
-        pendingLabel="Entrando..."
+        pendingLabel="Enviando enlace..."
         className="site-button mt-6 w-full disabled:cursor-not-allowed disabled:opacity-70"
       >
-        Entrar
+        Enviar enlace
       </AuthSubmitButton>
 
       <p className="mt-4 text-sm text-muted">
-        ¿Todavía no tienes cuenta?{" "}
-        <Link href="/registro" className="font-semibold text-accent-strong">
-          Crear cuenta
+        ¿Ya recuperaste el acceso?{" "}
+        <Link href="/login" className="font-semibold text-accent-strong">
+          Volver a login
         </Link>
       </p>
     </form>

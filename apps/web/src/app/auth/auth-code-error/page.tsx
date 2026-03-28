@@ -12,7 +12,7 @@ export default function AuthCodeErrorPage() {
         </h1>
         <p className="mt-4 text-base leading-7 text-muted">
           El enlace pudo expirar o la sesión no se pudo confirmar correctamente.
-          Intenta entrar de nuevo o crear otra vez tu cuenta.
+          Intenta entrar de nuevo, pedir otro enlace o crear otra vez tu cuenta.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
@@ -26,6 +26,12 @@ export default function AuthCodeErrorPage() {
             className="site-button-secondary"
           >
             Volver a registro
+          </Link>
+          <Link
+            href="/recuperar-contrasena"
+            className="site-button-secondary"
+          >
+            Recuperar contraseña
           </Link>
         </div>
       </div>
