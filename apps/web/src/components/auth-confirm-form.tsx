@@ -23,10 +23,11 @@ export function AuthConfirmForm() {
   useEffect(() => {
     let cancelled = false;
     const currentUrl = new URL(window.location.href);
+    const hashParams = new URLSearchParams(currentUrl.hash.replace(/^#/, ""));
     const next = normalizeNextPath(currentUrl.searchParams.get("next"), "/app");
-    const hasImplicitTokens =
-      currentUrl.hash.includes("access_token=") ||
-      currentUrl.hash.includes("refresh_token=");
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+    const hasImplicitTokens = Boolean(accessToken && refreshToken);
 
     function redirectToNext() {
       if (cancelled) {
@@ -62,6 +63,21 @@ export function AuthConfirmForm() {
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type,
+        });
+
+        if (error) {
+          redirectToError();
+          return;
+        }
+
+        redirectToNext();
+        return;
+      }
+
+      if (hasImplicitTokens && accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
         });
 
         if (error) {
