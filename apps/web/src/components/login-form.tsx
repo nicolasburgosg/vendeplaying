@@ -44,6 +44,7 @@ export function LoginForm() {
       <div className="mt-3 flex justify-end">
         <Link
           href="/recuperar-contrasena"
+          aria-label="Recuperar contraseña"
           className="text-sm font-semibold text-accent-strong"
         >
           ¿Olvidaste tu contraseña?
