@@ -1,19 +1,22 @@
 const LOCAL_SITE_URL = "http://127.0.0.1:3000";
 
-function requireEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") {
-  const value = process.env[name];
+export function getSupabasePublicEnv() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+  if (!url) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
   }
 
-  return value;
-}
+  if (!publishableKey) {
+    throw new Error(
+      "Missing required environment variable: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    );
+  }
 
-export function getSupabasePublicEnv() {
   return {
-    url: requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    publishableKey: requireEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+    url,
+    publishableKey,
   };
 }
 
